@@ -19,6 +19,7 @@
 #' @importFrom Rvcg vcgImport
 #' @importFrom rdist cdist
 #' @importFrom utils read.csv
+#' @export
 landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
   surface_mesh <- vcgImport(surface_mesh_path)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
@@ -45,6 +46,7 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 #' @importFrom dplyr filter
 #' @importFrom stats approx
 #' @importFrom magrittr "%>%"
+#' @export
 ct_coefficients <- function(table_height, calibration_curves, scanner, return_coeff = "sigma") {
   Scanner <- NULL
 
@@ -66,6 +68,7 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
 #' @param no_surface_sliders Numeric. Number of surface points to add
 #' @return Data frame. 3D coords of remapped surface points
 #' @importFrom stats kmeans
+#' @export
 surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders) {
   # get points from surface
   if (is.list(surface_mesh)) {
@@ -103,6 +106,7 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #' @return Data frame. 3D coords of remapped surface points
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom stats dist
+#' @export
 surface_points_new <- function(surface_mesh, landmarks, template) {
   ## helper functions
   rotate.mat <- function(M, Y){
@@ -246,6 +250,7 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' @return Vector. Vector with value for each point on surface
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
+#' @export
 surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0, nifti,
                                      betaCT = 1.0, sigmaCT = 1.0) {
   # format surface data
@@ -338,6 +343,7 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 #' @param betaCT Calibration value for CT to density calculation
 #' @param sigmaCT Calibration value for CT to density calculation
 #' @return Vector. Vector with value for each point on surface
+#' @export
 voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT) {
   vertex_coords <- data.matrix(vertex_coords)
   dims <- dim(vertex_coords)
@@ -385,6 +391,7 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT) {
 #' @param vertex_coords Matrix. 3D bone vertex coordinates
 #' @param nifti nifti image
 #' @return Error message if not in scan volume
+#' @export
 bone_scan_check <- function(vertex_coords, nifti) {
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
@@ -429,6 +436,7 @@ bone_scan_check <- function(vertex_coords, nifti) {
 #' @param template_points matrix
 #' @return Vector. Closest point on mesh to each template pint
 #' @importFrom rdist cdist
+#' @export
 mesh_template_match <- function(surface_mesh, template_points) {
   # get vertex coords
   vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
@@ -451,6 +459,7 @@ mesh_template_match <- function(surface_mesh, template_points) {
 #' @param mini Numeric.
 #' @return Vector of same length as x
 #' @importFrom grDevices colorRamp rgb
+#' @export
 color_mapping <- function(x, maxi, mini) {
   # scale distance vector between 0 and 1
   if (missing(maxi) == TRUE & missing(mini) == TRUE) {
@@ -484,6 +493,7 @@ color_mapping <- function(x, maxi, mini) {
 #' @importFrom rgl shade3d view3d bgplot3d
 #' @importFrom graphics plot.new mtext
 #' @importFrom methods hasArg
+#' @export
 plot_mesh <- function(surface_mesh, density_color, title, userMat) {
   verts <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(verts), 1)
@@ -511,6 +521,7 @@ plot_mesh <- function(surface_mesh, density_color, title, userMat) {
 #' @importFrom ggplot2 ggplot unit labs guides theme element_text geom_point aes scale_color_gradientn guide_colorbar
 #' @importFrom cowplot get_legend
 #' @importFrom ggpubr as_ggplot
+#' @export
 color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
                       title = "", text_size = 11, plot = TRUE) {
   # packages needed
@@ -556,6 +567,7 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
 #' @return Matrix with internal point coordinates
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
+#' @export
 fill_bone_points <- function(bone_surface, spacing) {
   # verts
   verts <- t(bone_surface$vb)[, 1:3]
@@ -599,6 +611,7 @@ fill_bone_points <- function(bone_surface, spacing) {
 #' @param mini Numeric
 #' @param export_path Character
 #' @importFrom Rvcg vcgPlyWrite
+#' @export
 color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
                        mini = 0, export_path) {
   # mesh match
@@ -629,6 +642,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @param dist Numeric. Distance to check for vertices
 #' @return Numeric vector
 #' @importFrom rdist cdist
+#' @export
 rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
