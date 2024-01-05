@@ -1,0 +1,10 @@
+Package: BoneDensityMapping
+Type: Package
+Title: Maps Bone Densities from CT scans to Surface Models
+Version: 0.1.0
+Author: Scott Telfer
+Maintainer: Scott Telfer <scott.telfer@gmail.com>
+Description: Takes CT data and maps derived local bone density estimates to 3D models.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
