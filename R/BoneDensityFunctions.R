@@ -1,9 +1,9 @@
-library(tidyverse)
-library(rdist)
-library(oro.nifti)
-library(rgl)
-library(Rvcg)
-library(ptinpoly)
+#library(tidyverse)
+#library(rdist)
+#library(oro.nifti)
+#library(rgl)
+#library(Rvcg)
+#library(ptinpoly)
 
 
 #' check landmarks are close to the bone
@@ -18,6 +18,7 @@ library(ptinpoly)
 #' surface
 #' @importFrom Rvcg vcgImport
 #' @importFrom rdist cdist
+#' @importFrom utils read.csv
 landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
   surface_mesh <- vcgImport(surface_mesh_path)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
@@ -36,11 +37,17 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 
 #' Sigma beta CT calculations
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param table_height
-#' @param calibration_curves
-#' @param scanner "CT1" or "CT2"
+#' @param table_height Numeric
+#' @param calibration_curves matrix
+#' @param scanner String "CT1" or "CT2"
+#' @param return_coeff String
 #' @return Vector with two elements, sigma and beta
+#' @importFrom dplyr filter
+#' @importFrom stats approx
+#' @importFrom magrittr "%>%"
 ct_coefficients <- function(table_height, calibration_curves, scanner, return_coeff = "sigma") {
+  Scanner <- NULL
+
   # get curves for scanner
   calibration_curves <- calibration_curves %>% filter(Scanner == scanner)
   sigmaCT <- approx(calibration_curves$TableHeight, calibration_curves$sigma, table_height)$y
@@ -58,6 +65,7 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
 #' @param landmarks Data frame. Contains 3D coords of landmarks
 #' @param no_surface_sliders Numeric. Number of surface points to add
 #' @return Data frame. 3D coords of remapped surface points
+#' @importFrom stats kmeans
 surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders) {
   # get points from surface
   if (is.list(surface_mesh)) {
@@ -93,6 +101,8 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #' @param landmarks Data frame. Contains 3D coords of landmarks
 #' @param template Data frame. 3D coords of remapped surface points
 #' @return Data frame. 3D coords of remapped surface points
+#' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom stats dist
 surface_points_new <- function(surface_mesh, landmarks, template) {
   ## helper functions
   rotate.mat <- function(M, Y){
@@ -133,7 +143,7 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 
   tps2d3d <- function(M, matr, matt, PB = TRUE){		#DCA: altered from J. Claude 2008
     p <- dim(matr)[1]; k <- dim(matr)[2]; q <- dim(M)[1]
-    Pdist <- as.matrix(dist(matr))
+    Pdist <- as.matrix(stats::dist(matr))
     ifelse(k == 2, P <- Pdist^2*log(Pdist^2), P <- Pdist)
     P[which(is.na(P))] <- 0
     Q <- cbind(1, matr)
@@ -234,6 +244,8 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' @param betaCT Numeric. Calibration value for CT to density calculation
 #' @param sigmaCT Numeric. Calibration value for CT to density calculation
 #' @return Vector. Vector with value for each point on surface
+#' @importFrom oro.nifti img_data
+#' @importFrom RNifti niftiHeader
 surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0, nifti,
                                      betaCT = 1.0, sigmaCT = 1.0) {
   # format surface data
@@ -321,8 +333,8 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 
 #' Finds material properties of bone at any point
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param vertex_coords
-#' @param nifti
+#' @param vertex_coords Matrix
+#' @param nifti nifti object
 #' @param betaCT Calibration value for CT to density calculation
 #' @param sigmaCT Calibration value for CT to density calculation
 #' @return Vector. Vector with value for each point on surface
@@ -371,7 +383,7 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT) {
 #' Checks bone is in scan volume
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertex_coords Matrix. 3D bone vertex coordinates
-#' @param nifti
+#' @param nifti nifti image
 #' @return Error message if not in scan volume
 bone_scan_check <- function(vertex_coords, nifti) {
   # format image data, with voxel coordinates
@@ -413,9 +425,10 @@ bone_scan_check <- function(vertex_coords, nifti) {
 
 #' Finds point closest to vertex for all vertices in a surface mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param vertex_coords Matrix. 3D coordinates
+#' @param surface_mesh mesh object
 #' @param template_points matrix
 #' @return Vector. Closest point on mesh to each template pint
+#' @importFrom rdist cdist
 mesh_template_match <- function(surface_mesh, template_points) {
   # get vertex coords
   vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
@@ -437,6 +450,7 @@ mesh_template_match <- function(surface_mesh, template_points) {
 #' @param maxi Numeric.
 #' @param mini Numeric.
 #' @return Vector of same length as x
+#' @importFrom grDevices colorRamp rgb
 color_mapping <- function(x, maxi, mini) {
   # scale distance vector between 0 and 1
   if (missing(maxi) == TRUE & missing(mini) == TRUE) {
@@ -462,9 +476,14 @@ color_mapping <- function(x, maxi, mini) {
 
 #' plot mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh
-#' @param density_color
+#' @param surface_mesh Mesh object
+#' @param density_color Vector
+#' @param title String
+#' @param userMat Matrix
 #' @return plot of mesh with color
+#' @importFrom rgl shade3d view3d bgplot3d
+#' @importFrom graphics plot.new mtext
+#' @importFrom methods hasArg
 plot_mesh <- function(surface_mesh, density_color, title, userMat) {
   verts <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(verts), 1)
@@ -481,18 +500,24 @@ plot_mesh <- function(surface_mesh, density_color, title, userMat) {
 
 
 #' Produce stand alone color bar
-#' @param colors
-#' @param mini
-#' @param maxi
-#' @param breaks
+#' @param colors String
+#' @param mini Numeric
+#' @param maxi Numeric
+#' @param breaks Numeric vector
 #' @param orientation "horizontal" or "vertical"
-#' @param title
-#' @param plot
-color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks, title = "", text_size = 11, plot = TRUE) {
+#' @param title String
+#' @param text_size Numeric
+#' @param plot Logical
+#' @importFrom ggplot2 ggplot unit labs guides theme element_text geom_point aes scale_color_gradientn guide_colorbar
+#' @importFrom cowplot get_legend
+#' @importFrom ggpubr as_ggplot
+color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
+                      title = "", text_size = 11, plot = TRUE) {
   # packages needed
-  require(ggplot2)
+  #require(ggplot2)
   #require(cowplot)
-  require(ggpubr)
+  #require(ggpubr)
+  x <- y <- NULL
 
   # make plot
   z2 <- seq(from = mini, to = maxi, length.out = 100)
@@ -526,9 +551,11 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks, titl
 
 
 #' fill bone
-#' @param bone_surface
-#' @param spacing
+#' @param bone_surface Mesh object
+#' @param spacing Numeric
 #' @return Matrix with internal point coordinates
+#' @importFrom ptinpoly pip3d
+#' @importFrom stats runif
 fill_bone_points <- function(bone_surface, spacing) {
   # verts
   verts <- t(bone_surface$vb)[, 1:3]
@@ -565,12 +592,13 @@ fill_bone_points <- function(bone_surface, spacing) {
 
 #' Color mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh
-#' @param template_pts
-#' @param density_vector
-#' @param maxi. Numeric
-#' @param mini. Numeric
-#' @param export_path
+#' @param surface_mesh Mesh object
+#' @param template_pts Matrix
+#' @param density_vector Vector
+#' @param maxi Numeric
+#' @param mini Numeric
+#' @param export_path Character
+#' @importFrom Rvcg vcgPlyWrite
 color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
                        mini = 0, export_path) {
   # mesh match
@@ -596,10 +624,11 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' local significance
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertices Matrix
-#' @param sig_vals. Numeric vector
+#' @param sig_vals Numeric vector
 #' @param sig_level Numeric. Default 0.05
-#' @param dist
+#' @param dist Numeric. Distance to check for vertices
 #' @return Numeric vector
+#' @importFrom rdist cdist
 rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
