@@ -16,6 +16,8 @@ library(ptinpoly)
 #' warning being thrown
 #' @return String. Returns a message warning that landmarks are not on bone
 #' surface
+#' @importFrom Rvcg vcgImport
+#' @importFrom rdist cdist
 landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
   surface_mesh <- vcgImport(surface_mesh_path)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
