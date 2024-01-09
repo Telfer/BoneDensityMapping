@@ -658,7 +658,7 @@ rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist, n_local = 1
 
     # are these also significant? If so update vector
     #print(sum(sig_vals[z] < sig_level))
-    if (sum(sig_vals[z] < sig_level)  > n_local) {sig_vals_updated[i] = sig_level + 0.01}
+    if (sum(sig_vals[z] < sig_level) < n_local) {sig_vals_updated[i] = sig_level + 0.01}
   }
 
   # return vector
