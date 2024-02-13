@@ -672,3 +672,30 @@ rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist, n_local = 1
   # return vector
   return(sig_vals_updated)
 }
+
+
+#' reorientate_landmarks
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param surface_mesh_path string to ply ascii mesh
+#' @param x Integer Value to apply to convert mesh i.e. -1 will mirror x coords
+#' @param y Integer Value to apply to convert mesh i.e. -1 will mirror y coords
+#' @param z Integer Value to apply to convert mesh i.e. -1 will mirror z coords
+#' @return Overwritten landmark file
+#' @export
+reorientate_landmarks <- function(landmark_path, x = 1, y = 1, z = 1) {
+  # import header
+  header <- readLines(landmark_path, n = 3)
+
+  # load data
+  lmks <- read.table(landmark_path, sep = ",")
+
+  # convert landmarks
+  lmks[, 2] <- lmks[, 2] * x
+  lmks[, 3] <- lmks[, 3] * y
+  lmks[, 4] <- lmks[, 4] * z
+
+  # write converted file
+  writeLines(header, landmark_path)
+  write.table(lmks, landmark_path, append = TRUE, sep = ",", row.names = FALSE,
+              col.names = FALSE)
+}
