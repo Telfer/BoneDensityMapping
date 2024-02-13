@@ -11,7 +11,9 @@ surface_normal_intersect(
   nifti,
   betaCT = 1,
   sigmaCT = 1,
-  rev_xy = FALSE
+  rev_x = FALSE,
+  rev_y = FALSE,
+  rev_z = FALSE
 )
 }
 \arguments{
@@ -27,7 +29,11 @@ surface_normal_intersect(
 
 \item{sigmaCT}{Numeric. Calibration value for CT to density calculation}
 
-\item{rev_xy}{Logical.}
+\item{rev_x}{Logical.}
+
+\item{rev_y}{Logical.}
+
+\item{rev_z}{Logical.}
 }
 \value{
 Vector. Vector with value for each point on surface

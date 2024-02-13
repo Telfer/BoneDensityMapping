@@ -247,14 +247,16 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' @param nifti Nifti
 #' @param betaCT Numeric. Calibration value for CT to density calculation
 #' @param sigmaCT Numeric. Calibration value for CT to density calculation
-#' @param rev_xy Logical.
+#' @param rev_x Logical.
+#' @param rev_y Logical.
+#' @param rev_z Logical.
 #' @return Vector. Vector with value for each point on surface
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
 surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0,
                                      nifti, betaCT = 1.0, sigmaCT = 1.0,
-                                     rev_xy = FALSE) {
+                                     rev_x = FALSE, rev_y = FALSE, rev_z = FALSE) {
   # format surface data
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
@@ -271,14 +273,21 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
   x_by <- niftiHeader(nifti)$srow_x[1]
   y_by <- niftiHeader(nifti)$srow_y[2]
   z_by <- niftiHeader(nifti)$srow_z[3]
-  if (rev_xy == TRUE) {
+  if (rev_x == TRUE) {
     x_seq <- rev(seq(niftiHeader(nifti)$qoffset_x * -1, by = x_by * -1, length.out = dims[1]))
-    y_seq <- rev(seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
   } else {
     x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = x_by * -1, length.out = dims[1])
+  }
+  if (rev_y == TRUE) {
+    y_seq <- rev(seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
+  } else {
     y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2])
   }
-  z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3])
+  if (rev_z == TRUE) {
+    z_seq <- rev(seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3]))
+  } else {
+    z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3])
+  }
 
   # check bone is within scan volume
   bone_x_min <- min(vertex_coords[, 1])
