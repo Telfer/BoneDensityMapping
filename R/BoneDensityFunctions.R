@@ -268,6 +268,9 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
   dims <- dim(img_data)
+  x_by <- niftiHeader(nifti)$srow_x[1]
+  y_by <- niftiHeader(nifti)$srow_y[2]
+  z_by <- niftiHeader(nifti)$srow_z[3]
   if (rev_xy == TRUE) {
     x_seq <- rev(seq(niftiHeader(nifti)$qoffset_x * -1, by = x_by * -1, length.out = dims[1]))
     y_seq <- rev(seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
