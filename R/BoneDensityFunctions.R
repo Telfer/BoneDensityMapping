@@ -530,10 +530,6 @@ plot_mesh <- function(surface_mesh, density_color, title, userMat) {
 #' @export
 color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
                       title = "", text_size = 11, plot = TRUE) {
-  # packages needed
-  #require(ggplot2)
-  #require(cowplot)
-  #require(ggpubr)
   x <- y <- NULL
 
   # make plot
@@ -676,11 +672,12 @@ rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist, n_local = 1
 
 #' reorientate_landmarks
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh_path string to ply ascii mesh
+#' @param landmark_path String
 #' @param x Integer Value to apply to convert mesh i.e. -1 will mirror x coords
 #' @param y Integer Value to apply to convert mesh i.e. -1 will mirror y coords
 #' @param z Integer Value to apply to convert mesh i.e. -1 will mirror z coords
 #' @return Overwritten landmark file
+#' @importFrom utils read.table write.table
 #' @export
 reorientate_landmarks <- function(landmark_path, x = 1, y = 1, z = 1) {
   # import header

@@ -4,7 +4,7 @@
 \alias{rm_local_sig}
 \title{local significance}
 \usage{
-rm_local_sig(vertices, sig_vals, sig_level = 0.05, dist)
+rm_local_sig(vertices, sig_vals, sig_level = 0.05, dist, n_local = 1)
 }
 \arguments{
 \item{vertices}{Matrix}
@@ -14,6 +14,8 @@ rm_local_sig(vertices, sig_vals, sig_level = 0.05, dist)
 \item{sig_level}{Numeric. Default 0.05}
 
 \item{dist}{Numeric. Distance to check for vertices}
+
+\item{n_local}{Numeric. Number of local significant values needed}
 }
 \value{
 Numeric vector
