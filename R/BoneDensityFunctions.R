@@ -472,10 +472,11 @@ mesh_template_match <- function(surface_mesh, template_points) {
 #' @param x Vector.
 #' @param maxi Numeric.
 #' @param mini Numeric.
+#' @param color_sel Vector.
 #' @return Vector of same length as x
 #' @importFrom grDevices colorRamp rgb
 #' @export
-color_mapping <- function(x, maxi, mini) {
+color_mapping <- function(x, maxi, mini, color_sel) {
   # scale distance vector between 0 and 1
   if (missing(maxi) == TRUE & missing(mini) == TRUE) {
     x01 <- (x - min(x)) / (max(x) - min(x))
@@ -486,9 +487,13 @@ color_mapping <- function(x, maxi, mini) {
   x01[is.na(x01)] <- mini
 
   # color map
-  colormap <- colorRamp(c("dark blue", "blue", "light blue",
-                          "green", "yellow", "red", "pink"),
-                        interpolate = "spline")
+  if (missing(color_sel == TRUE)) {
+    colormap <- colorRamp(c("dark blue", "blue", "light blue",
+                            "green", "yellow", "red", "pink"),
+                          interpolate = "spline")
+  } else {
+    colormap <- colorRamp(color_sel)
+  }
   ply_col <- colormap(x01)
   ply_col <- apply(ply_col, 1, function(x) rgb(x[1], x[2], x[3],
                                                maxColorValue = 255))
