@@ -487,7 +487,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
   x01[is.na(x01)] <- mini
 
   # color map
-  if (missing(color_sel == TRUE)) {
+  if (missing(color_sel) == TRUE) {
     colormap <- colorRamp(c("dark blue", "blue", "light blue",
                             "green", "yellow", "red", "pink"),
                           interpolate = "spline")
