@@ -357,9 +357,12 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 #' @param nifti nifti object
 #' @param betaCT Calibration value for CT to density calculation
 #' @param sigmaCT Calibration value for CT to density calculation
+#' @param check_in_vol Logical Include check that model is in scans volume
+#' and print dimensions
 #' @return Vector. Vector with value for each point on surface
 #' @export
-voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT) {
+voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT,
+                                  check_in_vol = FALSE) {
   vertex_coords <- data.matrix(vertex_coords)
   dims <- dim(vertex_coords)
   vertex_coords <- as.numeric(vertex_coords)
@@ -376,7 +379,9 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT) {
                length.out = dims[3])
 
   ## check vertices are in scan volume
-  bone_scan_check(vertex_coords, nifti)
+  if (check_in_vol == TRUE) {
+    bone_scan_check(vertex_coords, nifti)
+  }
 
   ## Find voxels intercepted by line
   mat_peak <- rep(NA, times = nrow(vertex_coords))
