@@ -661,27 +661,21 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @param sig_vals Numeric vector
 #' @param sig_level Numeric. Default 0.05
 #' @param dist Numeric. Distance to check for vertices
-#' @param n_local Numeric. Number of local significant values needed
 #' @return Numeric vector
 #' @importFrom rdist cdist
 #' @export
-rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist, n_local = 1) {
+rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
 
   # check if nearby values are also significant
   sig_vals_updated <- sig_vals
+  sig_verts <- vertices[sig_inds, ]
   for (i in 1:length(sig_inds)) {
     # which vertices are within distance
     vert <- vertices[sig_inds[i], ]
-    y <- cdist(vert, vertices)
-    z <- which(y < dist)
-
-    # are these also significant? If so update vector
-    #print(sum(sig_vals[z] < sig_level))
-    if (sum(sig_vals[z] < sig_level) < n_local) {
-      sig_vals_updated[sig_inds[i]] = sig_level + 0.01
-    }
+    y <- cdist(vert, sig_verts)
+    if (length(which(y < dist)) < 2) {sig_values_updated[sig_inds[i] = 0.1]}
   }
 
   # return vector
