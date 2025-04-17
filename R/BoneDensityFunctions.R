@@ -675,7 +675,7 @@ rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist) {
     # which vertices are within distance
     vert <- vertices[sig_inds[i], ]
     y <- cdist(vert, sig_verts)
-    if (length(which(y < dist)) < 2) {sig_values_updated[sig_inds[i] = 0.1]}
+    if (length(which(y < dist)) < 2) {sig_values_updated[sig_inds[i]] = 0.1}
   }
 
   # return vector
