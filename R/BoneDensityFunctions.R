@@ -659,23 +659,32 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertices Matrix
 #' @param sig_vals Numeric vector
+#' @param changes Numeric vector
 #' @param sig_level Numeric. Default 0.05
 #' @param dist Numeric. Distance to check for vertices
 #' @return Numeric vector
 #' @importFrom rdist cdist
 #' @export
-rm_local_sig <- function(vertices, sig_vals, sig_level = 0.05, dist) {
+rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
+  sig_changes <- changes[sig_inds]
+  sig_inds_up <- sig_inds[which(sig_changes > 0)]
+  sig_inds_down <- sig_inds[which(sig_changes < 0)]
 
   # check if nearby values are also significant
   sig_vals_updated <- sig_vals
-  sig_verts <- vertices[sig_inds, ]
-  for (i in 1:length(sig_inds)) {
-    # which vertices are within distance
-    vert <- vertices[sig_inds[i], ]
-    y <- cdist(vert, sig_verts)
-    if (length(which(y < dist)) < 2) {sig_vals_updated[sig_inds[i]] = 0.1}
+  sig_verts_up <- vertices[sig_inds_up, ]
+  sig_verts_down <- vertices[sig_inds_down, ]
+  for (i in 1:length(sig_inds_up)) {
+    vert <- vertices[sig_inds_up[i], ]
+    y <- cdist(vert, sig_verts_up)
+    if (length(which(y < dist)) < 2) {sig_vals_updated[sig_inds_up[i]] = 0.1}
+  }
+  for (i in 1:length(sig_inds_down)) {
+    vert <- vertices[sig_inds_down[i], ]
+    y <- cdist(vert, sig_verts_down)
+    if (length(which(y < dist)) < 2) {sig_vals_updated[sig_inds_down[i]] = 0.1}
   }
 
   # return vector
