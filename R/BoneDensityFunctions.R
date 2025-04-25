@@ -36,6 +36,91 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 }
 
 
+#' Checks bone is in scan volume
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param vertex_coords Matrix. 3D bone vertex coordinates
+#' @param nifti nifti image
+#' @return Error message if not in scan volume
+#' @export
+bone_scan_check <- function(vertex_coords, nifti) {
+  # format image data, with voxel coordinates
+  img_data <- img_data(nifti)
+  dims <- dim(img_data)
+  x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = niftiHeader(nifti)$srow_x[1] * -1,
+               length.out = dims[1])
+  y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = niftiHeader(nifti)$srow_y[2] * -1,
+               length.out = dims[2])
+  z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = niftiHeader(nifti)$srow_z[3],
+               length.out = dims[3])
+
+  # check bone is within scan volume
+  bone_x_min <- min(vertex_coords[, 1])
+  bone_x_max <- max(vertex_coords[, 1])
+  bone_y_min <- min(vertex_coords[, 2])
+  bone_y_max <- max(vertex_coords[, 2])
+  bone_z_min <- min(vertex_coords[, 3])
+  bone_z_max <- max(vertex_coords[, 3])
+  vol_x_min <- min(x_seq)
+  vol_x_max <- max(x_seq)
+  vol_y_min <- min(y_seq)
+  vol_y_max <- max(y_seq)
+  vol_z_min <- min(z_seq)
+  vol_z_max <- max(z_seq)
+  x1_good <- bone_x_min > vol_x_min
+  x2_good <- bone_x_max < vol_x_max
+  y1_good <- bone_y_min > vol_y_min
+  y2_good <- bone_y_max < vol_y_max
+  z1_good <- bone_z_min > vol_z_min
+  z2_good <- bone_z_max < vol_z_max
+  vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
+  print(c("x: ", bone_x_min, bone_x_max, vol_x_min, vol_x_max))
+  print(c("y: ", bone_y_min, bone_y_max, vol_y_min, vol_y_max))
+  print(c("z: ", bone_z_min, bone_z_max, vol_z_min, vol_z_max))
+  if (all(vals) != TRUE) {stop("bone not within scan volume")}
+}
+
+
+#' fill bone
+#' @param bone_surface Mesh object
+#' @param spacing Numeric
+#' @return Matrix with internal point coordinates
+#' @importFrom ptinpoly pip3d
+#' @importFrom stats runif
+#' @export
+fill_bone_points <- function(bone_surface, spacing) {
+  # verts
+  verts <- t(bone_surface$vb)[, 1:3]
+  faces <- t(bone_surface$it)
+
+  # bone extents
+  x_min <- min(verts[, 1])
+  x_max <- max(verts[, 1])
+  y_min <- min(verts[, 2])
+  y_max <- max(verts[, 2])
+  z_min <- min(verts[, 3])
+  z_max <- max(verts[, 3])
+
+  # make point df
+  x <- seq(from = x_min, to = x_max, by = spacing)
+  y <- seq(from = y_min, to = y_max, by = spacing)
+  z <- seq(from = z_min, to = z_max, by = spacing)
+  pt_mat <- as.matrix(expand.grid(x = x, y = y, z = z))
+
+  # find which points are within surface
+  in_bone <- which(pip3d(verts, faces, pt_mat) == 1)
+  in_coords <- pt_mat[in_bone, ]
+
+  # add a little noise
+  dims <- dim(in_coords)
+  noise <- runif(dims[1] * dims[2], -0.001, 0.001)
+  noise_mat <- matrix(noise, nrow = dims[1], ncol = dims[2])
+  in_coords <- in_coords + noise_mat
+
+  # return
+  return(in_coords)
+}
+
+
 #' Sigma beta CT calculations
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param table_height Numeric
@@ -406,49 +491,6 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT,
 }
 
 
-#' Checks bone is in scan volume
-#' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param vertex_coords Matrix. 3D bone vertex coordinates
-#' @param nifti nifti image
-#' @return Error message if not in scan volume
-#' @export
-bone_scan_check <- function(vertex_coords, nifti) {
-  # format image data, with voxel coordinates
-  img_data <- img_data(nifti)
-  dims <- dim(img_data)
-  x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = niftiHeader(nifti)$srow_x[1] * -1,
-               length.out = dims[1])
-  y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = niftiHeader(nifti)$srow_y[2] * -1,
-               length.out = dims[2])
-  z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = niftiHeader(nifti)$srow_z[3],
-               length.out = dims[3])
-
-  # check bone is within scan volume
-  bone_x_min <- min(vertex_coords[, 1])
-  bone_x_max <- max(vertex_coords[, 1])
-  bone_y_min <- min(vertex_coords[, 2])
-  bone_y_max <- max(vertex_coords[, 2])
-  bone_z_min <- min(vertex_coords[, 3])
-  bone_z_max <- max(vertex_coords[, 3])
-  vol_x_min <- min(x_seq)
-  vol_x_max <- max(x_seq)
-  vol_y_min <- min(y_seq)
-  vol_y_max <- max(y_seq)
-  vol_z_min <- min(z_seq)
-  vol_z_max <- max(z_seq)
-  x1_good <- bone_x_min > vol_x_min
-  x2_good <- bone_x_max < vol_x_max
-  y1_good <- bone_y_min > vol_y_min
-  y2_good <- bone_y_max < vol_y_max
-  z1_good <- bone_z_min > vol_z_min
-  z2_good <- bone_z_max < vol_z_max
-  vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
-  print(c("x: ", bone_x_min, bone_x_max, vol_x_min, vol_x_max))
-  print(c("y: ", bone_y_min, bone_y_max, vol_y_min, vol_y_max))
-  print(c("z: ", bone_z_min, bone_z_max, vol_z_min, vol_z_max))
-  if (all(vals) != TRUE) {stop("bone not within scan volume")}
-}
-
 
 #' Finds point closest to vertex for all vertices in a surface mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -581,46 +623,6 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
   return(lg)
 }
 
-
-#' fill bone
-#' @param bone_surface Mesh object
-#' @param spacing Numeric
-#' @return Matrix with internal point coordinates
-#' @importFrom ptinpoly pip3d
-#' @importFrom stats runif
-#' @export
-fill_bone_points <- function(bone_surface, spacing) {
-  # verts
-  verts <- t(bone_surface$vb)[, 1:3]
-  faces <- t(bone_surface$it)
-
-  # bone extents
-  x_min <- min(verts[, 1])
-  x_max <- max(verts[, 1])
-  y_min <- min(verts[, 2])
-  y_max <- max(verts[, 2])
-  z_min <- min(verts[, 3])
-  z_max <- max(verts[, 3])
-
-  # make point df
-  x <- seq(from = x_min, to = x_max, by = spacing)
-  y <- seq(from = y_min, to = y_max, by = spacing)
-  z <- seq(from = z_min, to = z_max, by = spacing)
-  pt_mat <- as.matrix(expand.grid(x = x, y = y, z = z))
-
-  # find which points are within surface
-  in_bone <- which(pip3d(verts, faces, pt_mat) == 1)
-  in_coords <- pt_mat[in_bone, ]
-
-  # add a little noise
-  dims <- dim(in_coords)
-  noise <- runif(dims[1] * dims[2], -0.001, 0.001)
-  noise_mat <- matrix(noise, nrow = dims[1], ncol = dims[2])
-  in_coords <- in_coords + noise_mat
-
-  # return
-  return(in_coords)
-}
 
 
 #' Color mesh
