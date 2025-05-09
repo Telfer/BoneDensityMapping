@@ -19,6 +19,13 @@ Data frame. 3D coords of remapped surface points
 \description{
 Redefine surface points
 }
+\examples{
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
+landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]
+mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
+}
 \author{
 Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
 }

@@ -4,7 +4,7 @@
 \alias{color_mapping}
 \title{maps numeric values to a color}
 \usage{
-color_mapping(x, maxi, mini)
+color_mapping(x, maxi, mini, color_sel)
 }
 \arguments{
 \item{x}{Vector.}
@@ -12,12 +12,22 @@ color_mapping(x, maxi, mini)
 \item{maxi}{Numeric.}
 
 \item{mini}{Numeric.}
+
+\item{color_sel}{Vector.}
 }
 \value{
 Vector of same length as x
 }
 \description{
 maps numeric values to a color
+}
+\examples{
+# calculate bone density at each vertex using surface_normal_intersect or voxel_point_intersect
+mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0, nifti, betaCT = 1.0, sigmaCT = 1.0)
+# Map these values to colors with default scaling and color palette
+colors <- color_mapping(mat_peak)
+# or map with a custom color range and palette
+colors_custom <- color_mapping(mat_peak, mini = 20, maxi = 80, color_sel = c("purple", "yellow"))
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

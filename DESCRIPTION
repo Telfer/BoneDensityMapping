@@ -8,7 +8,7 @@ Description: Takes CT data and maps derived local bone density estimates to 3D m
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Imports: 
     cowplot,
     dplyr,

@@ -4,7 +4,13 @@
 \alias{voxel_point_intersect}
 \title{Finds material properties of bone at any point}
 \usage{
-voxel_point_intersect(vertex_coords, nifti, betaCT, sigmaCT)
+voxel_point_intersect(
+  vertex_coords,
+  nifti,
+  betaCT,
+  sigmaCT,
+  check_in_vol = FALSE
+)
 }
 \arguments{
 \item{vertex_coords}{Matrix}
@@ -14,12 +20,25 @@ voxel_point_intersect(vertex_coords, nifti, betaCT, sigmaCT)
 \item{betaCT}{Calibration value for CT to density calculation}
 
 \item{sigmaCT}{Calibration value for CT to density calculation}
+
+\item{check_in_vol}{Logical Include check that model is in scans volume
+and print dimensions}
 }
 \value{
 Vector. Vector with value for each point on surface
 }
 \description{
 Finds material properties of bone at any point
+}
+\examples{
+#load vertices
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+vertices <- t(surface_mesh$vb)[, c(1:3)]
+#load nifti
+nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+nifti <- readNIfTI(nifti_path)
+mat_peak <- voxel_point_intersect(vertices, nifti, betaCT, sigmaCT)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
