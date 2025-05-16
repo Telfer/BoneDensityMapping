@@ -19,6 +19,7 @@ Imports:
     oro.nifti,
     ptinpoly,
     rdist,
+    rjson,
     rgl,
     RNifti,
     Rvcg

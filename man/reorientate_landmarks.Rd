@@ -21,6 +21,10 @@ Overwritten landmark file
 \description{
 reorientate_landmarks
 }
+\examples{
+landmark_path <- system.file("extdata", "landmark.fcsv", package = "BoneDensityMapping")
+reoriented_landmarks <- reorientate_landmarks(landmark_path)
+}
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
 }

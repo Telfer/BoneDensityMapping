@@ -1,9 +1,53 @@
-#library(tidyverse)
-#library(rdist)
-#library(oro.nifti)
-#library(rgl)
-#library(Rvcg)
-#library(ptinpoly)
+#' read landmark coordinates
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param lmk_fp String. File path to landmark data. Should be json or f.csv
+#' format
+#' @return Data frame. Columns are landmark name, x, y, and z coordinates
+#' @examples
+#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                              package = "BoneDensityMapping")
+#' import_lmks(landmark_path)
+#' @importFrom rjson fromJSON
+#' @importFrom tools file_ext
+#' @export
+
+import_lmks <- function(lmk_fp) {
+  # file type
+  file_type <- file_ext(lmk_fp)
+
+  # if json
+  if (file_type == "json") {
+    # import json
+    lmks <- fromJSON(file = lmk_fp)
+
+    # extract point lists
+    lmks_ <- lmks$markups[[1]]$controlPoints
+
+    # extract names and positions
+    lmk_names <- rep(NA, length(lmks_))
+    coords <- matrix(NA, nrow = length(lmks_), ncol = 3)
+    for (i in seq_along(lmks_)) {
+      fid <- lmks_[[i]]
+      mrk_names[i] <- fid$label
+      coords[i, ] <- fid$position
+    }
+
+    df <- cbind(mrk_names, coords)
+  }
+
+  # if fcsv
+  if (file_type == "fcsv") {
+    coords <- read.csv(lmk_fp, skip = 3, header = FALSE)[2:4]
+    df <- cbind(1:nrow(coords), coords)
+  }
+
+  # column names
+  colnames(df) <- c("lmk_id", "x", "y", "z")
+
+  # return
+  return(df)
+}
+
 
 #' check landmarks are close to the bone
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -16,7 +60,7 @@
 #' @return String. Returns a message warning that landmarks are not on bone
 #' surface
 #' @examples
-#' landmark_path <- system.file("extdata", "landmark.fcsv", package = "BoneDensityMapping")
+#' landmark_path <- system.file("extdata", "test_femur.fcsv", package = "BoneDensityMapping")
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
 #' landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
 #' @importFrom Rvcg vcgImport
@@ -358,13 +402,18 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' @return Vector. Vector with value for each point on surface
 #' @examples
 #' # load required files
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
 #' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
-#' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
 #' nifti <- readNIfTI(nifti_path)
 #' # Generate mapped surface coordinates using the surface_points_template function
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10)
-#' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks,
+#'                                          no_surface_sliders = 10)
+#' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
+#'                                      normal_dist = 3.0, nifti, betaCT = 1.0,
+#'                                      sigmaCT = 1.0)
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
@@ -569,12 +618,16 @@ mesh_template_match <- function(surface_mesh, template_points) {
 #' @param mini Numeric.
 #' @param color_sel Vector.
 #' @examples
-#' # calculate bone density at each vertex using surface_normal_intersect or voxel_point_intersect
-#' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' # calculate bone density at each vertex using surface_normal_intersect
+#' # or voxel_point_intersect
+#' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
+#'                                      normal_dist = 3.0, nifti, betaCT = 1.0,
+#'                                       sigmaCT = 1.0)
 #' # Map these values to colors with default scaling and color palette
 #' colors <- color_mapping(mat_peak)
 #' # or map with a custom color range and palette
-#' colors_custom <- color_mapping(mat_peak, mini = 20, maxi = 80, color_sel = c("purple", "yellow"))
+#' colors_custom <- color_mapping(mat_peak, mini = 20, maxi = 80,
+#'                                color_sel = c("purple", "yellow"))
 #' @return Vector of same length as x
 #' @importFrom grDevices colorRamp rgb
 #' @export
@@ -611,7 +664,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @param title String
 #' @param userMat Matrix
 #' @return plot of mesh with color
-#' @@examples
+#' @examples
 #' #load surface mesh
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
 #' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
@@ -763,7 +816,7 @@ rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
 #' @param y Integer Value to apply to convert mesh i.e. -1 will mirror y coords
 #' @param z Integer Value to apply to convert mesh i.e. -1 will mirror z coords
 #' @return Overwritten landmark file
-#' @example
+#' @examples
 #' landmark_path <- system.file("extdata", "landmark.fcsv", package = "BoneDensityMapping")
 #' reoriented_landmarks <- reorientate_landmarks(landmark_path)
 #' @importFrom utils read.table write.table

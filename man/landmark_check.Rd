@@ -24,7 +24,7 @@ surface
 check landmarks are close to the bone
 }
 \examples{
-landmark_path <- system.file("extdata", "landmark.fcsv", package = "BoneDensityMapping")
+landmark_path <- system.file("extdata", "test_femur.fcsv", package = "BoneDensityMapping")
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
 landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
 }
