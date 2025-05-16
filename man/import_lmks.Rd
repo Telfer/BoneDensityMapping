@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{import_lmks}
 \alias{import_lmks}
-\title{read landmark coordinates}
+\title{import landmark coordinates}
 \usage{
 import_lmks(lmk_fp)
 }
@@ -14,7 +14,7 @@ format}
 Data frame. Columns are landmark name, x, y, and z coordinates
 }
 \description{
-read landmark coordinates
+import landmark coordinates
 }
 \examples{
 landmark_path <- system.file("extdata", "test_femur.mrk.json",

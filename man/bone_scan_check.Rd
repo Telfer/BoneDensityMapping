@@ -18,9 +18,11 @@ Error message if not in scan volume
 Checks bone is in scan volume
 }
 \examples{
-nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
-nifti <- readNIfTI(nifti_path)
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+nifti_path <- system.file("extdata", "test_CT_hip.nii",
+                          package = "BoneDensityMapping")
+nifti <- import_scan(nifti_path)
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+                                 package = "BoneDensityMapping")
 surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
 vertices <- t(surface_mesh$vb)[, c(1:3)]
 bone_scan_check(vertices, nifti)

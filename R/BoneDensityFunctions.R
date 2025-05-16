@@ -1,4 +1,4 @@
-#' read landmark coordinates
+#' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param lmk_fp String. File path to landmark data. Should be json or f.csv
 #' format
@@ -10,7 +10,6 @@
 #' @importFrom rjson fromJSON
 #' @importFrom tools file_ext
 #' @export
-
 import_lmks <- function(lmk_fp) {
   # file type
   file_type <- file_ext(lmk_fp)
@@ -49,6 +48,41 @@ import_lmks <- function(lmk_fp) {
 }
 
 
+#' import CT scan
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param scan_fp String. File path to CT scan data. Should be .nii or .nrrd
+#' @return scan object
+#' @examples
+#' scan_path <- system.file("extdata", "test_CT_hip.nii",
+#'                          package = "BoneDensityMapping")
+#' import_scan(scan_path)
+#' @importFrom oro.nifti readNIfTI
+#' @export
+import_scan <- function(scan_fp) {
+  # file type
+  file_type <- file_ext(scan_fp)
+
+  # nii
+  if (file_type == "nii") {
+    nifti <- readNIfTI(scan_fp)
+  }
+
+  # return
+  return(nifti)
+}
+
+
+#' import surface mesh
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param mesh_fp String. File path to CT scan data. Should be .stl or .ply
+#' @return mesh object
+#' @examples
+#' scan_path <- system.file("extdata", "test_CT_hip.nii",
+#'                          package = "BoneDensityMapping")
+#' @importFrom oro.nifti readNIfTI
+#' @export
+
+
 #' check landmarks are close to the bone
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh_path String. Filepath to triangulated surface mesh in
@@ -60,8 +94,10 @@ import_lmks <- function(lmk_fp) {
 #' @return String. Returns a message warning that landmarks are not on bone
 #' surface
 #' @examples
-#' landmark_path <- system.file("extdata", "test_femur.fcsv", package = "BoneDensityMapping")
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' landmark_path <- system.file("extdata", "test_femur.fcsv",
+#'                              package = "BoneDensityMapping")
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
 #' landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
 #' @importFrom Rvcg vcgImport
 #' @importFrom rdist cdist
@@ -70,7 +106,7 @@ import_lmks <- function(lmk_fp) {
 landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
   surface_mesh <- vcgImport(surface_mesh_path)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
-  landmarks <- read.csv(landmark_path, skip = 3, header = FALSE)[2:4]
+  landmarks <- import_lmks(landmark_path)
 
   dists <- c()
   for (i in 1:nrow(landmarks)) {
@@ -89,9 +125,11 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 #' @param nifti nifti image
 #' @return Error message if not in scan volume
 #' @examples
-#' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
-#' nifti <- readNIfTI(nifti_path)
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
+#' nifti <- import_scan(nifti_path)
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
 #' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
 #' vertices <- t(surface_mesh$vb)[, c(1:3)]
 #' bone_scan_check(vertices, nifti)
