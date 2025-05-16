@@ -77,11 +77,18 @@ import_scan <- function(scan_fp) {
 #' @param mesh_fp String. File path to CT scan data. Should be .stl or .ply
 #' @return mesh object
 #' @examples
-#' scan_path <- system.file("extdata", "test_CT_hip.nii",
+#' mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                          package = "BoneDensityMapping")
-#' @importFrom oro.nifti readNIfTI
+#' import_mesh(mesh_path)
+#' @importFrom Rvcg vcgImport
 #' @export
+import_mesh <- function(mesh_fp) {
+  # import scan
+  mesh <- vcgImport(mesh_fp)
 
+  # return
+  return(mesh)
+}
 
 #' check landmarks are close to the bone
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -99,12 +106,11 @@ import_scan <- function(scan_fp) {
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
 #' landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
-#' @importFrom Rvcg vcgImport
 #' @importFrom rdist cdist
 #' @importFrom utils read.csv
 #' @export
 landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
-  surface_mesh <- vcgImport(surface_mesh_path)
+  surface_mesh <- import_mesh(surface_mesh_path)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
   landmarks <- import_lmks(landmark_path)
 
@@ -130,7 +136,7 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 #' nifti <- import_scan(nifti_path)
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 #' vertices <- t(surface_mesh$vb)[, c(1:3)]
 #' bone_scan_check(vertices, nifti)
 #' @export
@@ -177,8 +183,9 @@ bone_scan_check <- function(vertex_coords, nifti) {
 #' @param spacing Numeric
 #' @return Matrix with internal point coordinates
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
+#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 #' internal_fill <- fill_bone_points(surface_mesh, 10)
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
