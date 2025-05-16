@@ -20,7 +20,7 @@ Finds point closest to vertex for all vertices in a surface mesh
 \examples{
 #load surface mesh
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+surface_mesh <- import_scan(surface_mesh_path, updateNormals = TRUE)
 #load landmarks (template points?)
 landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
 landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]

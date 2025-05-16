@@ -90,6 +90,7 @@ import_mesh <- function(mesh_fp) {
   return(mesh)
 }
 
+
 #' check landmarks are close to the bone
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh_path String. Filepath to triangulated surface mesh in
@@ -136,7 +137,7 @@ landmark_check <- function(surface_mesh_path, landmark_path, threshold = 1.0) {
 #' nifti <- import_scan(nifti_path)
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh <- import_mesh(surface_mesh_path)
 #' vertices <- t(surface_mesh$vb)[, c(1:3)]
 #' bone_scan_check(vertices, nifti)
 #' @export
@@ -256,8 +257,9 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
 #' @param no_surface_sliders Numeric. Number of surface points to add
 #' @return Data frame. 3D coords of remapped surface points
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
+#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 #' landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
 #' landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]
 #' mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
@@ -449,10 +451,10 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' # load required files
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii",
 #'                           package = "BoneDensityMapping")
-#' nifti <- readNIfTI(nifti_path)
+#' nifti <- import_scan(nifti_path)
 #' # Generate mapped surface coordinates using the surface_points_template function
 #' mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                          no_surface_sliders = 10)
@@ -570,11 +572,11 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 #' @examples
 #' #load vertices
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 #' vertices <- t(surface_mesh$vb)[, c(1:3)]
 #' #load nifti
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
-#' nifti <- readNIfTI(nifti_path)
+#' nifti <- import_scan(nifti_path)
 #' mat_peak <- voxel_point_intersect(vertices, nifti, betaCT, sigmaCT)
 #' @return Vector. Vector with value for each point on surface
 #' @export
@@ -632,7 +634,7 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT, sigmaCT,
 #' @examples
 #' #load surface mesh
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-#' surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+#' surface_mesh <- import_scan(surface_mesh_path, updateNormals = TRUE)
 #' #load landmarks (template points?)
 #' landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
 #' landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]

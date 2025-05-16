@@ -45,10 +45,10 @@ Finds material properties of bone at surface point
 # load required files
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
 nifti_path <- system.file("extdata", "test_CT_hip.nii",
                           package = "BoneDensityMapping")
-nifti <- readNIfTI(nifti_path)
+nifti <- read_scan(nifti_path)
 # Generate mapped surface coordinates using the surface_points_template function
 mapped_coords <- surface_points_template(surface_mesh, landmarks,
                                          no_surface_sliders = 10)

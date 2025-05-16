@@ -23,7 +23,7 @@ nifti_path <- system.file("extdata", "test_CT_hip.nii",
 nifti <- import_scan(nifti_path)
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
+surface_mesh <- import_mesh(surface_mesh_path)
 vertices <- t(surface_mesh$vb)[, c(1:3)]
 bone_scan_check(vertices, nifti)
 }
