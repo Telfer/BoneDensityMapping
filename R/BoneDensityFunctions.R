@@ -47,6 +47,7 @@ import_lmks <- function(lmk_fp) {
   return(df)
 }
 
+
 #' import CT scan
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param scan_fp String. File path to CT scan data. Should be .nii or .nrrd
@@ -348,7 +349,7 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
     x <- as.matrix(x)
     if(det(x) > 1e-8) {
       res <- try(chol2inv(chol(x)), silent = TRUE)
-      if(class(res) == "try-error") res <- fast.ginv(x)
+      if (inherits(res, "try-error")) res <- fast.ginv(x)
     } else res <- fast.ginv(x)
     return(res)
   }
