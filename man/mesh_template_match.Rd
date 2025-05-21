@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{mesh_template_match}
 \alias{mesh_template_match}
-\title{Finds point closest to vertex for all vertices in a surface mesh}
+\title{Finds the closest template point for each vertex in a 3D surface mesh}
 \usage{
 mesh_template_match(surface_mesh, template_points)
 }
@@ -15,17 +15,15 @@ mesh_template_match(surface_mesh, template_points)
 Vector. Closest point on mesh to each template point
 }
 \description{
-Finds point closest to vertex for all vertices in a surface mesh
+Finds the closest template point for each vertex in a 3D surface mesh
 }
 \examples{
-#load surface mesh
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-surface_mesh <- import_scan(surface_mesh_path, updateNormals = TRUE)
-#load landmarks (template points?)
-landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
-landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]
-# Generate n mapped surface coordinates using the surface_points_template function
-mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10)
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+                                 package = "BoneDensityMapping")
+surface_mesh <- import_mesh(surface_mesh_path)
+landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
 matched_points <- mesh_template_match(surface_mesh, mapped_coords)
 }
 \author{

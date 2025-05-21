@@ -22,7 +22,8 @@ Overwritten landmark file
 reorientate_landmarks
 }
 \examples{
-landmark_path <- system.file("extdata", "landmark.fcsv", package = "BoneDensityMapping")
+landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                             package = "BoneDensityMapping")
 reoriented_landmarks <- reorientate_landmarks(landmark_path)
 }
 \author{

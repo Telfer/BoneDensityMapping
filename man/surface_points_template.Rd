@@ -2,29 +2,30 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_points_template}
 \alias{surface_points_template}
-\title{Redefine surface points}
+\title{Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.}
 \usage{
 surface_points_template(surface_mesh, landmarks, no_surface_sliders)
 }
 \arguments{
-\item{surface_mesh}{Mesh file}
+\item{surface_mesh}{Mesh object}
 
-\item{landmarks}{Data frame. Contains 3D coords of landmarks}
+\item{landmarks}{Data frame with landmark coordinates (columns: ID, x, y, z)}
 
-\item{no_surface_sliders}{Numeric. Number of surface points to add}
+\item{no_surface_sliders}{Numeric, number of additional surface points to generate}
 }
 \value{
-Data frame. 3D coords of remapped surface points
+Data frame. 3D coordinates for the combined set of original landmarks and the new surface points
 }
 \description{
-Redefine surface points
+Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
 }
 \examples{
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
-landmark_path = "/Users/lucaslacambra/Downloads/F_4.fcsv"
-landmarks <- read.csv(landmark_path, skip = 3, header = FALSE) [, 2:4]
+surface_mesh <- import_mesh(surface_mesh_path)
+landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                             package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
 mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
 }
 \author{

@@ -4,12 +4,12 @@
 \alias{bone_scan_check}
 \title{Checks bone is in scan volume}
 \usage{
-bone_scan_check(vertex_coords, nifti)
+bone_scan_check(mesh, nifti)
 }
 \arguments{
-\item{vertex_coords}{Matrix. 3D bone vertex coordinates}
+\item{mesh}{mesh file}
 
-\item{nifti}{nifti image}
+\item{nifti}{nifti CT scan image}
 }
 \value{
 Error message if not in scan volume
@@ -18,14 +18,13 @@ Error message if not in scan volume
 Checks bone is in scan volume
 }
 \examples{
-nifti_path <- system.file("extdata", "test_CT_hip.nii",
+scan_fp <- system.file("extdata", "test_CT_hip.nii",
                           package = "BoneDensityMapping")
-nifti <- import_scan(nifti_path)
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+nifti <- import_scan(scan_fp)
+mesh_fp <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path)
-vertices <- t(surface_mesh$vb)[, c(1:3)]
-bone_scan_check(vertices, nifti)
+mesh <- import_mesh(mesh_fp)
+bone_scan_check(mesh, nifti)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
