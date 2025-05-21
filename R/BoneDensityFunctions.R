@@ -895,12 +895,8 @@ reorientate_landmarks <- function(landmark_path, x = 1, y = 1, z = 1) {
   file_ext <- tools::file_ext(landmark_path)
 
   if (file_ext == "fcsv") {
-    # === Handle FCSV format ===
-
-    # Read header (first 3 lines)
+    # Handle FCSV format
     header <- readLines(landmark_path, n = 3)
-
-    # Read data starting after header
     lmks <- read.table(landmark_path, sep = ",", skip = 3, header = TRUE)
 
     # Apply mirroring
@@ -914,9 +910,7 @@ reorientate_landmarks <- function(landmark_path, x = 1, y = 1, z = 1) {
                 row.names = FALSE, col.names = TRUE)
 
   } else if (file_ext == "json") {
-    # === Handle JSON format ===
-
-    # Load JSON
+    # Handle JSON format
     data <- read_json(landmark_path)  # no simplifyVector!
 
     for (i in seq_along(data$markups[[1]]$controlPoints)) {
