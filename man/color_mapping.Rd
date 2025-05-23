@@ -22,16 +22,13 @@ Vector of same length as x
 maps numeric values to a color
 }
 \examples{
-# calculate bone density at each vertex using surface_normal_intersect
-# or voxel_point_intersect
-mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-                                     normal_dist = 3.0, nifti, betaCT = 1.0,
-                                      sigmaCT = 1.0)
-# Map these values to colors with default scaling and color palette
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+surface_mesh <- import_mesh(surface_mesh_path)
+vertices <- t(surface_mesh$vb)[, c(1:3)]
+nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+nifti <- import_scan(nifti_path)
+mat_peak <- voxel_point_intersect(vertices, nifti)
 colors <- color_mapping(mat_peak)
-# or map with a custom color range and palette
-colors_custom <- color_mapping(mat_peak, mini = 20, maxi = 80,
-                               color_sel = c("purple", "yellow"))
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

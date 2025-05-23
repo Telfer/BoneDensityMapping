@@ -7,8 +7,8 @@
 voxel_point_intersect(
   vertex_coords,
   nifti,
-  betaCT,
-  sigmaCT,
+  betaCT = 1,
+  sigmaCT = 1,
   check_in_vol = FALSE
 )
 }
@@ -31,14 +31,12 @@ Vector. Vector with value for each point on surface
 Finds material properties of bone at any point
 }
 \examples{
-#load vertices
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path, updateNormals = TRUE)
+surface_mesh <- import_mesh(surface_mesh_path)
 vertices <- t(surface_mesh$vb)[, c(1:3)]
-#load nifti
 nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
 nifti <- import_scan(nifti_path)
-mat_peak <- voxel_point_intersect(vertices, nifti, betaCT, sigmaCT)
+mat_peak <- voxel_point_intersect(vertices, nifti, betaCT = 1.0, sigmaCT = 1.0)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

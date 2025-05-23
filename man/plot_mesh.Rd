@@ -9,11 +9,11 @@ plot_mesh(surface_mesh, density_color, title, userMat)
 \arguments{
 \item{surface_mesh}{Mesh object}
 
-\item{density_color}{Vector}
+\item{density_color}{Vector with colors (mapped from density values)}
 
 \item{title}{String}
 
-\item{userMat}{Matrix}
+\item{userMat}{Matrix for graph orientation}
 }
 \value{
 plot of mesh with color
@@ -22,13 +22,14 @@ plot of mesh with color
 plot mesh
 }
 \examples{
-#load surface mesh
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-surface_mesh <- vcgImport(surface_mesh_path, updateNormals = TRUE)
-density_color <- color_mapping(mat_peak)
-# specify custom view angles using a 4x4 matrix (e.g., rotating the plot)
-userMat <- matrix(c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -5, 0, 0, 0, 1), nrow = 4, byrow = TRUE)
-plot_mesh(surface_mesh, density_color, "Mesh Colored by Z", userMat)
+surface_mesh <- import_mesh(surface_mesh_path)
+vertices <- t(surface_mesh$vb)[, c(1:3)]
+nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+nifti <- import_scan(nifti_path)
+mat_peak <- voxel_point_intersect(vertices, nifti)
+colors <- color_mapping(mat_peak)
+plot <- plot_mesh(surface_mesh, colors, "Femur Bone Density")
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

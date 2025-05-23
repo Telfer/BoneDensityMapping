@@ -2,15 +2,15 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{landmark_check}
 \alias{landmark_check}
-\title{check landmarks are close to the bone}
+\title{check landmarks are close to the mesh}
 \usage{
-landmark_check(surface_mesh_path, landmark_path, threshold = 1)
+landmark_check(mesh_fp, lmk_fp, threshold = 1)
 }
 \arguments{
-\item{surface_mesh_path}{String. Filepath to triangulated surface mesh in
+\item{mesh_fp}{String. Filepath to triangulated surface mesh in
 ply or stl format}
 
-\item{landmark_path}{String. Filepath to landmark data in .fcsv format from
+\item{lmk_fp}{String. Filepath to landmark data in .fcsv format from
 3D Slicer}
 
 \item{threshold}{Numeric. Distance landmark can be from surface without
@@ -21,7 +21,7 @@ String. Returns a message warning that landmarks are not on bone
 surface
 }
 \description{
-check landmarks are close to the bone
+check landmarks are close to the mesh
 }
 \examples{
 landmark_path <- system.file("extdata", "test_femur.fcsv",

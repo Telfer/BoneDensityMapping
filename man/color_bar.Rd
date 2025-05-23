@@ -35,3 +35,7 @@ color_bar(
 \description{
 Produce stand alone color bar
 }
+\examples{
+colors <- c("darkblue", "blue", "lightblue", "green", "yellow", "red", "pink")
+color_bar(colors, 0, 1, breaks = c(0, 0.25, 0.5, 0.75, 1))
+}
