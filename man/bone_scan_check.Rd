@@ -2,29 +2,29 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{bone_scan_check}
 \alias{bone_scan_check}
-\title{Checks bone is in scan volume}
+\title{Checks mesh is fully contained is in scan volume}
 \usage{
-bone_scan_check(mesh, nifti)
+bone_scan_check(surface_mesh, nifti)
 }
 \arguments{
-\item{mesh}{mesh file}
+\item{surface_mesh}{Mesh object}
 
 \item{nifti}{nifti CT scan image}
 }
 \value{
-Error message if not in scan volume
+Error message if mesh extends outside scan volume
 }
 \description{
-Checks bone is in scan volume
+Checks mesh is fully contained is in scan volume
 }
 \examples{
-scan_fp <- system.file("extdata", "test_CT_hip.nii",
+scan_filepath <- system.file("extdata", "test_CT_hip.nii",
                           package = "BoneDensityMapping")
-nifti <- import_scan(scan_fp)
-mesh_fp <- system.file("extdata", "test_CT_femur.stl",
+nifti <- import_scan(scan_filepath)
+surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-mesh <- import_mesh(mesh_fp)
-bone_scan_check(mesh, nifti)
+surface_mesh <- import_mesh(surface_mesh_filepath)
+bone_scan_check(surface_mesh, nifti)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

@@ -4,14 +4,13 @@
 \alias{import_lmks}
 \title{import landmark coordinates}
 \usage{
-import_lmks(lmk_fp)
+import_lmks(landmark_path)
 }
 \arguments{
-\item{lmk_fp}{String. File path to landmark data. Should be json or f.csv
-format}
+\item{landmark_path}{String. File path to landmark data, .json or .fcsv format}
 }
 \value{
-Data frame. Columns are landmark name, x, y, and z coordinates
+dataframe. Columns are landmark name, x, y, and z coordinates
 }
 \description{
 import landmark coordinates
@@ -19,7 +18,7 @@ import landmark coordinates
 \examples{
 landmark_path <- system.file("extdata", "test_femur.mrk.json",
                              package = "BoneDensityMapping")
-import_lmks(landmark_path)
+landmarks <- import_lmks(landmark_path)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

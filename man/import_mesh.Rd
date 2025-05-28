@@ -4,10 +4,10 @@
 \alias{import_mesh}
 \title{import surface mesh}
 \usage{
-import_mesh(mesh_fp)
+import_mesh(surface_mesh_filepath)
 }
 \arguments{
-\item{mesh_fp}{String. File path to CT scan data. Should be .stl or .ply}
+\item{surface_mesh_filepath}{String. File path to CT scan data. Should be .stl or .ply}
 }
 \value{
 mesh object
@@ -16,9 +16,9 @@ mesh object
 import surface mesh
 }
 \examples{
-mesh_path <- system.file("extdata", "test_CT_femur.stl",
+surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
                          package = "BoneDensityMapping")
-import_mesh(mesh_path)
+surface_mesh <- import_mesh(surface_mesh_filepath)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

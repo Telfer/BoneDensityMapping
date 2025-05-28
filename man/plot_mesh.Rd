@@ -9,7 +9,7 @@ plot_mesh(surface_mesh, density_color, title, userMat)
 \arguments{
 \item{surface_mesh}{Mesh object}
 
-\item{density_color}{Vector with colors (mapped from density values)}
+\item{density_color}{Vector with colors mapped from density values}
 
 \item{title}{String}
 
