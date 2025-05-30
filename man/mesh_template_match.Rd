@@ -23,7 +23,7 @@ surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 surface_mesh <- import_mesh(surface_mesh_path)
 landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
 landmarks <- import_lmks(landmark_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, 100)
 matched_points <- mesh_template_match(surface_mesh, mapped_coords)
 }
 \author{

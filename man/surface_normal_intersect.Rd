@@ -51,7 +51,7 @@ landmarks <- import_lmks(landmark_path)
 nifti_path <- system.file("extdata", "test_CT_hip.nii",
                           package = "BoneDensityMapping")
 nifti <- import_scan(nifti_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
 mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
                                      normal_dist = 3.0, nifti, betaCT = 1.0,
                                      sigmaCT = 1.0)

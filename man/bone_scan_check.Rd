@@ -2,20 +2,23 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{bone_scan_check}
 \alias{bone_scan_check}
-\title{Checks mesh is fully contained is in scan volume}
+\title{Check if mesh or vertex coordinates are fully contained within scan volume}
 \usage{
 bone_scan_check(surface_mesh, nifti)
 }
 \arguments{
-\item{surface_mesh}{Mesh object}
+\item{surface_mesh}{A 3D mesh object (class \code{mesh3d}) or a numeric
+matrix/data frame of vertex coordinates (with columns representing X, Y, and Z).}
 
-\item{nifti}{nifti CT scan image}
+\item{nifti}{A NIfTI image object representing a CT scan.}
 }
 \value{
-Error message if mesh extends outside scan volume
+If all vertices are inside the scan volume, the function prints a summary
+  of the mesh and scan bounds. If any vertices lie outside the scan volume, it
+  raises an error.
 }
 \description{
-Checks mesh is fully contained is in scan volume
+Check if mesh or vertex coordinates are fully contained within scan volume
 }
 \examples{
 scan_filepath <- system.file("extdata", "test_CT_hip.nii",
