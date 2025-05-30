@@ -22,8 +22,8 @@ Vector of same length as x
 maps numeric values to a color
 }
 \examples{
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path)
+surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+surface_mesh <- import_mesh(surface_mesh_filepath)
 vertices <- t(surface_mesh$vb)[, c(1:3)]
 nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
 nifti <- import_scan(nifti_path)

@@ -4,10 +4,10 @@
 \alias{import_scan}
 \title{import CT scan}
 \usage{
-import_scan(scan_fp)
+import_scan(scan_filepath)
 }
 \arguments{
-\item{scan_fp}{String. File path to CT scan data. Should be .nii or .nrrd}
+\item{scan_filepath}{String. File path to CT scan data. Should be .nii or .nrrd}
 }
 \value{
 scan object
@@ -16,9 +16,9 @@ scan object
 import CT scan
 }
 \examples{
-scan_path <- system.file("extdata", "test_CT_hip.nii",
+scan_filepath <- system.file("extdata", "test_CT_hip.nii",
                          package = "BoneDensityMapping")
-import_scan(scan_path)
+import_scan(scan_filepath)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

@@ -26,7 +26,7 @@ surface_mesh <- import_mesh(surface_mesh_path)
 landmark_path <- system.file("extdata", "test_femur.mrk.json",
                              package = "BoneDensityMapping")
 landmarks <- import_lmks(landmark_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph

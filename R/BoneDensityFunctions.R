@@ -1,23 +1,24 @@
+# To-do
+# add .nrrd compatibility
+# add multiple bone scan/mesh/landmark sets
+# optimize surface_normal_intersect
+
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param lmk_fp String. File path to landmark data. Should be json or f.csv
-#' format
-#' @return Data frame. Columns are landmark name, x, y, and z coordinates
+#' @param landmark_path String. File path to landmark data, .json or .fcsv format
+#' @return dataframe. Columns are landmark name, x, y, and z coordinates
 #' @examples
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                              package = "BoneDensityMapping")
-#' import_lmks(landmark_path)
+#' landmarks <- import_lmks(landmark_path)
 #' @importFrom rjson fromJSON
 #' @importFrom tools file_ext
 #' @export
-import_lmks <- function(lmk_fp) {
-  # file type
-  file_type <- file_ext(lmk_fp)
+import_lmks <- function(landmark_path) {
+  file_type <- file_ext(landmark_path)
 
-  # if json
   if (file_type == "json") {
-    # import json
-    lmks <- fromJSON(file = lmk_fp)
+    lmks <- fromJSON(file = landmark_path)
 
     # extract point lists
     lmks_ <- lmks$markups[[1]]$controlPoints
@@ -30,18 +31,15 @@ import_lmks <- function(lmk_fp) {
       lmk_names[i] <- fid$label
       coords[i, ] <- fid$position
     }
+    df <- data.frame(lmk_id = lmk_names, x = coords[, 1], y = coords[, 2], z = coords[, 3])
 
-    df <- cbind(lmk_names, coords)
+  } else if (file_type == "fcsv") {
+    coords <- read.csv(landmark_path, skip = 3, header = FALSE)[, 2:4]
+    df <- data.frame(lmk_id = seq_len(nrow(coords)), x = coords[[1]], y = coords[[2]], z = coords[[3]])
+
+  } else {
+    stop("Unsupported file type: must be .json or .fcsv")
   }
-
-  # if fcsv
-  if (file_type == "fcsv") {
-    coords <- read.csv(lmk_fp, skip = 3, header = FALSE)[2:4]
-    df <- cbind(1:nrow(coords), coords)
-  }
-
-  # column names
-  colnames(df) <- c("lmk_id", "x", "y", "z")
 
   # return
   return(df)
@@ -50,53 +48,50 @@ import_lmks <- function(lmk_fp) {
 
 #' import CT scan
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param scan_fp String. File path to CT scan data. Should be .nii or .nrrd
+#' @param scan_filepath String. File path to CT scan data. Should be .nii or .nrrd
 #' @return scan object
 #' @examples
-#' scan_path <- system.file("extdata", "test_CT_hip.nii",
+#' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
 #'                          package = "BoneDensityMapping")
-#' import_scan(scan_path)
+#' import_scan(scan_filepath)
 #' @importFrom oro.nifti readNIfTI
 #' @export
-import_scan <- function(scan_fp) {
-  # file type
-  file_type <- file_ext(scan_fp)
+import_scan <- function(scan_filepath) {
+  file_type <- file_ext(scan_filepath)
 
-  # nii
   if (file_type == "nii") {
-    nifti <- readNIfTI(scan_fp)
+    nifti <- readNIfTI(scan_filepath)
   }
-
-  # return
+  else {
+    stop("Unsupported file type: must be .nii")
+  }
   return(nifti)
 }
 
 
 #' import surface mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param mesh_fp String. File path to CT scan data. Should be .stl or .ply
+#' @param surface_mesh_filepath String. File path to CT scan data. Should be .stl or .ply
 #' @return mesh object
 #' @examples
-#' mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                          package = "BoneDensityMapping")
-#' import_mesh(mesh_path)
+#' surface_mesh <- import_mesh(surface_mesh_filepath)
 #' @importFrom Rvcg vcgImport
 #' @export
-import_mesh <- function(mesh_fp) {
+import_mesh <- function(surface_mesh_filepath) {
   # import scan
-  mesh <- vcgImport(mesh_fp)
+  surface_mesh <- vcgImport(surface_mesh_filepath)
 
   # return
-  return(mesh)
+  return(surface_mesh)
 }
 
 
 #' check landmarks are close to the mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param mesh_fp String. Filepath to triangulated surface mesh in
-#' ply or stl format
-#' @param lmk_fp String. Filepath to landmark data in .fcsv format from
-#' 3D Slicer
+#' @param surface_mesh mesh object
+#' @param landmarks dataframe. Columns are landmark name, x, y, and z coordinates
 #' @param threshold Numeric. Distance landmark can be from surface without
 #' warning being thrown
 #' @return String. Returns a message warning that landmarks are not on bone
@@ -104,16 +99,16 @@ import_mesh <- function(mesh_fp) {
 #' @examples
 #' landmark_path <- system.file("extdata", "test_femur.fcsv",
 #'                              package = "BoneDensityMapping")
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#' landmarks <- import_lmks(landmark_path)
+#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
+#' surface_mesh <- import_mesh(surface_mesh_filepath)
+#' landmark_check(surface_mesh, landmarks, threshold = 1.0)
 #' @importFrom rdist cdist
 #' @importFrom utils read.csv
 #' @export
-landmark_check <- function(mesh_fp, lmk_fp, threshold = 1.0) {
-  surface_mesh <- import_mesh(mesh_fp)
+landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
   vertices <- t(surface_mesh$vb)[, c(1:3)]
-  landmarks <- import_lmks(lmk_fp)
   coords <- landmarks[, c("x", "y", "z")]
 
   dists <- c()
@@ -128,26 +123,36 @@ landmark_check <- function(mesh_fp, lmk_fp, threshold = 1.0) {
     bad_ids <- landmarks$lmk_id[dists > threshold]
     message("landmarks not on bone surface: ", paste(bad_ids, collapse = ", "))
   }
+  else message("landmarks are on bone surface")
 }
 
 
-#' Checks bone is in scan volume
+#' Check if mesh or vertex coordinates are fully contained within scan volume
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param mesh mesh file
-#' @param nifti nifti CT scan image
-#' @return Error message if not in scan volume
+#' @param surface_mesh A 3D mesh object (class \code{mesh3d}) or a numeric
+#'    matrix/data frame of vertex coordinates (with columns representing X, Y, and Z).
+#' @param nifti A NIfTI image object representing a CT scan.
+#' @return If all vertices are inside the scan volume, the function prints a summary
+#'   of the mesh and scan bounds. If any vertices lie outside the scan volume, it
+#'   raises an error.
 #' @examples
-#' scan_fp <- system.file("extdata", "test_CT_hip.nii",
+#' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
 #'                           package = "BoneDensityMapping")
-#' nifti <- import_scan(scan_fp)
-#' mesh_fp <- system.file("extdata", "test_CT_femur.stl",
+#' nifti <- import_scan(scan_filepath)
+#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' mesh <- import_mesh(mesh_fp)
-#' bone_scan_check(mesh, nifti)
+#' surface_mesh <- import_mesh(surface_mesh_filepath)
+#' bone_scan_check(surface_mesh, nifti)
 #' @export
-bone_scan_check <- function(mesh, nifti) {
-  #pull vertices from mesh
-  vertices <- t(mesh$vb)[, 1:3]
+bone_scan_check <- function(surface_mesh, nifti) {
+
+  if (inherits(surface_mesh, "mesh3d")) {
+    vertices <- t(surface_mesh$vb)[, 1:3]
+  } else if (is.matrix(surface_mesh) || is.data.frame(surface_mesh)) {
+    vertices <- as.matrix(surface_mesh)
+  } else {
+    stop("surface_mesh must be a mesh3d object or a matrix of vertex coordinates.")
+  }
 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
@@ -160,29 +165,34 @@ bone_scan_check <- function(mesh, nifti) {
                length.out = dims[3])
 
   # check bone is within scan volume
-  bone_x_min <- min(vertices[, 1])
-  bone_x_max <- max(vertices[, 1])
-  bone_y_min <- min(vertices[, 2])
-  bone_y_max <- max(vertices[, 2])
-  bone_z_min <- min(vertices[, 3])
-  bone_z_max <- max(vertices[, 3])
+  mesh_x_min <- min(vertices[, 1])
+  mesh_x_max <- max(vertices[, 1])
+  mesh_y_min <- min(vertices[, 2])
+  mesh_y_max <- max(vertices[, 2])
+  mesh_z_min <- min(vertices[, 3])
+  mesh_z_max <- max(vertices[, 3])
   vol_x_min <- min(x_seq)
   vol_x_max <- max(x_seq)
   vol_y_min <- min(y_seq)
   vol_y_max <- max(y_seq)
   vol_z_min <- min(z_seq)
   vol_z_max <- max(z_seq)
-  x1_good <- bone_x_min > vol_x_min
-  x2_good <- bone_x_max < vol_x_max
-  y1_good <- bone_y_min > vol_y_min
-  y2_good <- bone_y_max < vol_y_max
-  z1_good <- bone_z_min > vol_z_min
-  z2_good <- bone_z_max < vol_z_max
+  x1_good <- mesh_x_min > vol_x_min
+  x2_good <- mesh_x_max < vol_x_max
+  y1_good <- mesh_y_min > vol_y_min
+  y2_good <- mesh_y_max < vol_y_max
+  z1_good <- mesh_z_min > vol_z_min
+  z2_good <- mesh_z_max < vol_z_max
   vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
-  print(c("x: ", bone_x_min, bone_x_max, vol_x_min, vol_x_max))
-  print(c("y: ", bone_y_min, bone_y_max, vol_y_min, vol_y_max))
-  print(c("z: ", bone_z_min, bone_z_max, vol_z_min, vol_z_max))
-  if (all(vals) != TRUE) {stop("bone not within scan volume")}
+  df <- data.frame(
+    Axis = c("X", "Y", "Z"),
+    Mesh_Min = c(mesh_x_min, mesh_y_min, mesh_z_min),
+    Mesh_Max = c(mesh_x_max, mesh_y_max, mesh_z_max),
+    Scan_Min = c(vol_x_min, vol_y_min, vol_z_min),
+    Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
+  )
+  print(df, digits = 3)
+  if (!all(vals)) {stop("Mesh not within scan volume")}
 }
 
 
@@ -191,25 +201,25 @@ bone_scan_check <- function(mesh, nifti) {
 #' @param spacing Numeric
 #' @return Matrix with internal point coordinates
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_path)
+#' surface_mesh <- import_mesh(surface_mesh_filepath)
 #' internal_fill <- fill_bone_points(surface_mesh, 10)
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
 #' @export
 fill_bone_points <- function(surface_mesh, spacing) {
   # verts
-  verts <- t(surface_mesh$vb)[, 1:3]
+  vertices <- t(surface_mesh$vb)[, 1:3]
   faces <- t(surface_mesh$it)
 
   # bone extents
-  x_min <- min(verts[, 1])
-  x_max <- max(verts[, 1])
-  y_min <- min(verts[, 2])
-  y_max <- max(verts[, 2])
-  z_min <- min(verts[, 3])
-  z_max <- max(verts[, 3])
+  x_min <- min(vertices[, 1])
+  x_max <- max(vertices[, 1])
+  y_min <- min(vertices[, 2])
+  y_max <- max(vertices[, 2])
+  z_min <- min(vertices[, 3])
+  z_max <- max(vertices[, 3])
 
   # make point df
   x <- seq(from = x_min, to = x_max, by = spacing)
@@ -218,7 +228,7 @@ fill_bone_points <- function(surface_mesh, spacing) {
   pt_mat <- as.matrix(expand.grid(x = x, y = y, z = z))
 
   # find which points are within surface
-  in_bone <- which(pip3d(verts, faces, pt_mat) == 1)
+  in_bone <- which(pip3d(vertices, faces, pt_mat) == 1)
   in_coords <- pt_mat[in_bone, ]
 
   # add a little noise
@@ -230,32 +240,6 @@ fill_bone_points <- function(surface_mesh, spacing) {
   # return
   return(in_coords)
 }
-
-
-#' Sigma beta CT calculations
-#' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param table_height Numeric
-#' @param calibration_curves matrix
-#' @param scanner String "CT1" or "CT2"
-#' @param return_coeff String
-#' @return Vector with two elements, sigma and beta
-#' @importFrom dplyr filter
-#' @importFrom stats approx
-#' @importFrom magrittr "%>%"
-#' @export
-ct_coefficients <- function(table_height, calibration_curves, scanner, return_coeff = "sigma") {
-  Scanner <- NULL
-
-  # get curves for scanner
-  calibration_curves <- calibration_curves %>% filter(Scanner == scanner)
-  sigmaCT <- approx(calibration_curves$TableHeight, calibration_curves$sigma, table_height)$y
-  betaCT <- approx(calibration_curves$TableHeight, calibration_curves$beta, table_height)$y
-
-  # return
-  if(return_coeff == "sigma") {return(sigmaCT)}
-  if(return_coeff == "beta") {return(betaCT)}
-}
-
 
 #' Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
 #' @author Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
@@ -270,7 +254,7 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                              package = "BoneDensityMapping")
 #' landmarks <- import_lmks(landmark_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
 #' @importFrom stats kmeans
 #' @export
 surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders) {
@@ -293,7 +277,6 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
                                                (landmark_coords[i, 2] - vertices[, 2]) ^ 2 +
                                                (landmark_coords[i, 3] - vertices[, 3]) ^ 2))[1])
   }
-  nlandmarks <- nrow(landmarks)
   vertices <- vertices[-lmk.add, ]
 
   # Use k-means clustering to find 'no_surface_sliders' new surface points
@@ -470,8 +453,7 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii",
 #'                           package = "BoneDensityMapping")
 #' nifti <- import_scan(nifti_path)
-#' # Generate mapped surface coordinates using the surface_points_template function
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
 #' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
 #'                                      normal_dist = 3.0, nifti, betaCT = 1.0,
 #'                                      sigmaCT = 1.0)
@@ -481,15 +463,14 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0,
                                      nifti, betaCT = 1.0, sigmaCT = 1.0,
                                      rev_x = FALSE, rev_y = FALSE, rev_z = FALSE) {
-  # Extract surface coordinates and normals from the mesh
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
 
   # Convert mapped_coords to numeric matrix form for calculations
-  vertex_coords <- data.matrix(mapped_coords)
-  dims <- dim(vertex_coords)
-  vertex_coords <- as.numeric(vertex_coords)
-  dim(vertex_coords) <- dims
+  vertices <- data.matrix(mapped_coords)
+  dims <- dim(vertices)
+  vertices <- as.numeric(vertices)
+  dim(vertices) <- dims
 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
@@ -513,38 +494,43 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
     z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3])
   }
 
-  # check bone surface coordinates are within CT scan volume boundaries
-  bone_x_min <- min(vertex_coords[, 1])
-  bone_x_max <- max(vertex_coords[, 1])
-  bone_y_min <- min(vertex_coords[, 2])
-  bone_y_max <- max(vertex_coords[, 2])
-  bone_z_min <- min(vertex_coords[, 3])
-  bone_z_max <- max(vertex_coords[, 3])
+  # check bone is within scan volume
+  mesh_x_min <- min(vertices[, 1])
+  mesh_x_max <- max(vertices[, 1])
+  mesh_y_min <- min(vertices[, 2])
+  mesh_y_max <- max(vertices[, 2])
+  mesh_z_min <- min(vertices[, 3])
+  mesh_z_max <- max(vertices[, 3])
   vol_x_min <- min(x_seq)
   vol_x_max <- max(x_seq)
   vol_y_min <- min(y_seq)
   vol_y_max <- max(y_seq)
   vol_z_min <- min(z_seq)
   vol_z_max <- max(z_seq)
-  x1_good <- bone_x_min > vol_x_min
-  x2_good <- bone_x_max < vol_x_max
-  y1_good <- bone_y_min > vol_y_min
-  y2_good <- bone_y_max < vol_y_max
-  z1_good <- bone_z_min > vol_z_min
-  z2_good <- bone_z_max < vol_z_max
+  x1_good <- mesh_x_min > vol_x_min
+  x2_good <- mesh_x_max < vol_x_max
+  y1_good <- mesh_y_min > vol_y_min
+  y2_good <- mesh_y_max < vol_y_max
+  z1_good <- mesh_z_min > vol_z_min
+  z2_good <- mesh_z_max < vol_z_max
   vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
-  print(c("x: ", bone_x_min, bone_x_max, vol_x_min, vol_x_max))
-  print(c("y: ", bone_y_min, bone_y_max, vol_y_min, vol_y_max))
-  print(c("z: ", bone_z_min, bone_z_max, vol_z_min, vol_z_max))
-  if (all(vals) != TRUE) {stop("bone not within scan volume")}
+  df <- data.frame(
+    Axis = c("X", "Y", "Z"),
+    Mesh_Min = c(mesh_x_min, mesh_y_min, mesh_z_min),
+    Mesh_Max = c(mesh_x_max, mesh_y_max, mesh_z_max),
+    Scan_Min = c(vol_x_min, vol_y_min, vol_z_min),
+    Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
+  )
+  print(df, digits = 3)
+  if (!all(vals)) {stop("Mesh not within scan volume")}
 
   # Find voxels intercepted by line
-  mat_peak <- rep(NA, times = nrow(vertex_coords))
+  mat_peak <- rep(NA, times = nrow(vertices))
 
   # Loop through each surface point to sample CT data along the surface normal
-  for (i in 1:nrow(vertex_coords)) {
+  for (i in 1:nrow(vertices)) {
     # find nearest point
-    yy <- t(as.matrix(vertex_coords[i, ], 1, 3))
+    yy <- t(as.matrix(vertices[i, ], 1, 3))
     y <- cdist(yy, surface_coords)
     matched_point <- which.min(y)
 
@@ -575,8 +561,6 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 
   # Return the vector of density values for each mapped coordinate
   return(mat_peak)
-  #mapped_with_density <- cbind(mapped_coords, density = mat_peak)
-
 }
 
 
@@ -589,12 +573,18 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
 #' @param check_in_vol Logical Include check that model is in scans volume
 #' and print dimensions
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_path)
-#' vertices <- t(surface_mesh$vb)[, c(1:3)]
-#' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                              package = "BoneDensityMapping")
+#' landmarks <- import_lmks(landmark_path)
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
 #' nifti <- import_scan(nifti_path)
-#' mat_peak <- voxel_point_intersect(vertices, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+#' mat_peak <- voxel_point_intersect(mapped_coords, nifti,
+#'    betaCT = 1.0, sigmaCT = 1.0, check_in_vol = TRUE)
 #' @return Vector. Vector with value for each point on surface
 #' @export
 voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 1.0,
@@ -653,22 +643,23 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 
 #' surface_mesh <- import_mesh(surface_mesh_path)
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
 #' landmarks <- import_lmks(landmark_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 10)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 100)
 #' matched_points <- mesh_template_match(surface_mesh, mapped_coords)
-#' @importFrom rdist cdist
+#' @importFrom FNN get.knnx
 #' @export
 mesh_template_match <- function(surface_mesh, template_points) {
-  # get vertex coords
+  # Get vertex coordinates from the mesh
   vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
 
-  # calculate distances
-  y <- cdist(vertex_coords, template_points)
+  # Ensure template_points is a matrix (not a data frame)
+  template_points <- as.matrix(template_points)
 
-  # calculate which point is closest
-  matched_points <- apply(y, 1, which.min)
+  # Use get.knnx to find nearest neighbors
+  # This finds the nearest (k = 1) template point to each vertex
+  nn <- get.knnx(data = template_points, query = vertex_coords, k = 1)
 
-  # return
-  return(matched_points)
+  # nn$nn.index contains the indices of the nearest neighbors
+  return(as.vector(nn$nn.index))
 }
 
 
@@ -679,8 +670,8 @@ mesh_template_match <- function(surface_mesh, template_points) {
 #' @param mini Numeric.
 #' @param color_sel Vector.
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_path)
+#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' surface_mesh <- import_mesh(surface_mesh_filepath)
 #' vertices <- t(surface_mesh$vb)[, c(1:3)]
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
 #' nifti <- import_scan(nifti_path)
@@ -722,31 +713,94 @@ color_mapping <- function(x, maxi, mini, color_sel) {
   return(ply_col)
 }
 
+
+#' Takes matrix of points (template_points) of length n with
+#' density vector of length n and maps it to a surface mesh of length m.
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param surface_mesh Mesh object
+#' @param template_pts Matrix
+#' @param density_vector Vector
+#' @param maxi Numeric
+#' @param mini Numeric
+#' @param export_path Character
+#' @return Mesh with added color dimension
+#' @examples
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
+#' surface_mesh <- import_mesh(surface_mesh_path)
+#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                              package = "BoneDensityMapping")
+#' landmarks <- import_lmks(landmark_path)
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
+#' nifti <- import_scan(nifti_path)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+#' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+#' @importFrom Rvcg vcgPlyWrite
+#' @export
+color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
+                       mini = 0, export_path) {
+  # this function
+  # then use plot<-color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+  # shade3d(plot)
+  # mesh match
+  mesh_match <- mesh_template_match(surface_mesh, template_pts)
+
+  # color
+  density_vector[density_vector > maxi] <- maxi
+  density_vector[density_vector < mini] <- mini
+  color_map <- color_mapping(density_vector, maxi, mini)
+
+  # color to mesh
+  surface_mesh$material$color <- color_map[mesh_match]
+
+  # return
+  if (missing(export_path) == FALSE) {
+    vcgPlyWrite(surface_mesh, export_path)
+  } else {
+    return(surface_mesh)
+  }
+}
+
+
 #' plot mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
-#' @param density_color Vector with colors (mapped from density values)
-#' @param userMat Matrix for graph orientation
-#' @param title String
+#' @param density_color Vector. Colors mapped from density values.
+#' @param title String. Plot title.
+#' @param userMat Optional matrix. Controls graph orientation.
 #' @return plot of mesh with color
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_path)
-#' vertices <- t(surface_mesh$vb)[, c(1:3)]
-#' nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                              package = "BoneDensityMapping")
+#' landmarks <- import_lmks(landmark_path)
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
 #' nifti <- import_scan(nifti_path)
-#' mat_peak <- voxel_point_intersect(vertices, nifti)
-#' colors <- color_mapping(mat_peak)
-#' plot <- plot_mesh(surface_mesh, colors, "Femur Bone Density")
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+#' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+#' plot <- plot_mesh(colored_mesh, "Femur Bone Density")
 #' @importFrom rgl shade3d view3d bgplot3d
 #' @importFrom graphics plot.new mtext
 #' @importFrom methods hasArg
 #' @export
-plot_mesh <- function(surface_mesh, density_color, title, userMat) {
-  verts <- as.matrix(t(surface_mesh$vb)[,-4])
-  surface_mesh$vb <- rbind(t(verts), 1)
-  surface_mesh$material <- list(color = density_color)
-  shade3d(surface_mesh, meshColor = "vertices", main = "Age", specular = 'black')
+plot_mesh <- function(surface_mesh, title, density_color = NULL, userMat = NULL) {
+  #ensure formatting
+  vertices <- as.matrix(t(surface_mesh$vb)[,-4])
+  surface_mesh$vb <- rbind(t(vertices), 1)
+
+  if (!missing(density_color)) {
+    surface_mesh$material <- list(color = density_color)
+    shade3d(surface_mesh, meshColor = "vertices", main = "Age", specular = 'black')
+  } else {
+    shade3d(surface_mesh)
+  }
+
   bgplot3d({
     plot.new()
     mtext(side = 1, title, line = 3)
@@ -755,6 +809,7 @@ plot_mesh <- function(surface_mesh, density_color, title, userMat) {
     view3d(userMatrix = userMat)
   }
 }
+
 
 #' Produce stand alone color bar
 #' @param colors String
@@ -806,39 +861,6 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
   return(lg)
 }
 
-
-#' Color mesh
-#' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh Mesh object
-#' @param template_pts Matrix
-#' @param density_vector Vector
-#' @param maxi Numeric
-#' @param mini Numeric
-#' @param export_path Character
-#' @importFrom Rvcg vcgPlyWrite
-#' @export
-color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
-                       mini = 0, export_path) {
-  # mesh match
-  mesh_match <- mesh_template_match(surface_mesh, template_pts)
-
-  # color
-  density_vector[density_vector > maxi] <- maxi
-  density_vector[density_vector < mini] <- mini
-  color_map <- color_mapping(density_vector, maxi, mini)
-
-  # color to mesh
-  surface_mesh$material$color <- color_map[mesh_match]
-
-  # return
-  if (missing(export_path) == FALSE) {
-    vcgPlyWrite(surface_mesh, export_path)
-  } else {
-    return(surface_mesh)
-  }
-}
-
-
 #' local significance
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertices Matrix
@@ -848,7 +870,6 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @param dist Numeric. Distance to check for vertices
 #' @return Numeric vector
 #' @importFrom rdist cdist
-#' @export
 rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
@@ -875,6 +896,28 @@ rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
   return(sig_vals_updated)
 }
 
+#' Sigma beta CT calculations
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param table_height Numeric
+#' @param calibration_curves matrix
+#' @param scanner String "CT1" or "CT2"
+#' @param return_coeff String
+#' @return Vector with two elements, sigma and beta
+#' @importFrom dplyr filter
+#' @importFrom stats approx
+#' @importFrom magrittr "%>%"
+ct_coefficients <- function(table_height, calibration_curves, scanner, return_coeff = "sigma") {
+  Scanner <- NULL
+
+  # get curves for scanner
+  calibration_curves <- calibration_curves %>% filter(Scanner == scanner)
+  sigmaCT <- approx(calibration_curves$TableHeight, calibration_curves$sigma, table_height)$y
+  betaCT <- approx(calibration_curves$TableHeight, calibration_curves$beta, table_height)$y
+
+  # return
+  if(return_coeff == "sigma") {return(sigmaCT)}
+  if(return_coeff == "beta") {return(betaCT)}
+}
 
 #' reorientate_landmarks
 #' @author Scott Telfer \email{scott.telfer@gmail.com}

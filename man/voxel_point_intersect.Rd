@@ -31,12 +31,18 @@ Vector. Vector with value for each point on surface
 Finds material properties of bone at any point
 }
 \examples{
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+                                 package = "BoneDensityMapping")
 surface_mesh <- import_mesh(surface_mesh_path)
-vertices <- t(surface_mesh$vb)[, c(1:3)]
-nifti_path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
+landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                             package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
+nifti_path <- system.file("extdata", "test_CT_hip.nii",
+                          package = "BoneDensityMapping")
 nifti <- import_scan(nifti_path)
-mat_peak <- voxel_point_intersect(vertices, nifti, betaCT = 1.0, sigmaCT = 1.0)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+mat_peak <- voxel_point_intersect(mapped_coords, nifti,
+   betaCT = 1.0, sigmaCT = 1.0, check_in_vol = TRUE)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

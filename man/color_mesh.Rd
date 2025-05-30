@@ -2,7 +2,8 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{color_mesh}
 \alias{color_mesh}
-\title{Color mesh}
+\title{Takes matrix of points (template_points) of length n with
+density vector of length n and maps it to a surface mesh of length m.}
 \usage{
 color_mesh(
   surface_mesh,
@@ -26,8 +27,26 @@ color_mesh(
 
 \item{export_path}{Character}
 }
+\value{
+Mesh with added color dimension
+}
 \description{
-Color mesh
+Takes matrix of points (template_points) of length n with
+density vector of length n and maps it to a surface mesh of length m.
+}
+\examples{
+surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+                                 package = "BoneDensityMapping")
+surface_mesh <- import_mesh(surface_mesh_path)
+landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                             package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
+nifti_path <- system.file("extdata", "test_CT_hip.nii",
+                          package = "BoneDensityMapping")
+nifti <- import_scan(nifti_path)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

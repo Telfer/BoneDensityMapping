@@ -4,14 +4,12 @@
 \alias{landmark_check}
 \title{check landmarks are close to the mesh}
 \usage{
-landmark_check(mesh_fp, lmk_fp, threshold = 1)
+landmark_check(surface_mesh, landmarks, threshold = 1)
 }
 \arguments{
-\item{mesh_fp}{String. Filepath to triangulated surface mesh in
-ply or stl format}
+\item{surface_mesh}{mesh object}
 
-\item{lmk_fp}{String. Filepath to landmark data in .fcsv format from
-3D Slicer}
+\item{landmarks}{dataframe. Columns are landmark name, x, y, and z coordinates}
 
 \item{threshold}{Numeric. Distance landmark can be from surface without
 warning being thrown}
@@ -26,9 +24,11 @@ check landmarks are close to the mesh
 \examples{
 landmark_path <- system.file("extdata", "test_femur.fcsv",
                              package = "BoneDensityMapping")
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+landmarks <- import_lmks(landmark_path)
+surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-landmark_check(surface_mesh_path, landmark_path, threshold = 1.0)
+surface_mesh <- import_mesh(surface_mesh_filepath)
+landmark_check(surface_mesh, landmarks, threshold = 1.0)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

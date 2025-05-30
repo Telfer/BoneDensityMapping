@@ -1,0 +1,30 @@
+test_that("fill_bone_points returns correct point matrix", {
+  # Load example mesh
+  surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
+  surface_mesh <- import_mesh(surface_mesh_filepath)
+
+  # Run fill_bone_points with spacing 10
+  points <- fill_bone_points(surface_mesh, spacing = 10)
+
+  # Test 1: output is matrix
+  expect_true(is.matrix(points))
+
+  # Test 2: points are within bounding box of mesh vertices (plus small margin)
+  verts <- t(surface_mesh$vb)[, 1:3]
+  margin <- 0.01
+  expect_true(all(points[,1] >= min(verts[,1]) - margin))
+  expect_true(all(points[,1] <= max(verts[,1]) + margin))
+  expect_true(all(points[,2] >= min(verts[,2]) - margin))
+  expect_true(all(points[,2] <= max(verts[,2]) + margin))
+  expect_true(all(points[,3] >= min(verts[,3]) - margin))
+  expect_true(all(points[,3] <= max(verts[,3]) + margin))
+
+  # Test 3: some points returned
+  expect_gt(nrow(points), 0)
+
+  # Test 4: number of points returned is not greater than total points in grid
+  x <- seq(min(verts[,1]), max(verts[,1]), by = 10)
+  y <- seq(min(verts[,2]), max(verts[,2]), by = 10)
+  z <- seq(min(verts[,3]), max(verts[,3]), by = 10)
+  expect_lte(nrow(points), length(x) * length(y) * length(z))
+})
