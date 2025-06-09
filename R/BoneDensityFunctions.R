@@ -54,18 +54,25 @@ import_lmks <- function(landmark_path) {
 #' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
 #'                          package = "BoneDensityMapping")
 #' import_scan(scan_filepath)
-#' @importFrom oro.nifti readNIfTI
+#' @importFrom oro.nifti readNIfTI nifti
+#' @importFrom nat read.nrrd
 #' @export
 import_scan <- function(scan_filepath) {
   file_type <- file_ext(scan_filepath)
 
-  if (file_type == "nii") {
-    nifti <- readNIfTI(scan_filepath)
+  if (file_type == "nii" | file_type == "nrrd") {
+    if (file_type == "nii") {
+      nifti_scan <- readNIfTI(scan_filepath)
+    }
+    if (file_type == "nrrd") {
+      nrrd <- read.nrrd(scan_filepath)
+      nifti_scan <- nifti(img = nrrd)
+    }
   }
   else {
-    stop("Unsupported file type: must be .nii")
+    stop("Unsupported file type: must be .nii or .nrrd")
   }
-  return(nifti)
+  return(nifti_scan)
 }
 
 
