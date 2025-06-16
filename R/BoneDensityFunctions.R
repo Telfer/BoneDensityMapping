@@ -303,6 +303,22 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #' @param landmarks Data frame. Contains 3D coords of landmarks
 #' @param template Data frame. 3D coords of remapped surface points
 #' @return Data frame. 3D coords of remapped surface points
+#' @examples
+#' surface_mesh_path <- system.file("extdata", "SCAP001.stl",
+#'                                  package = "BoneDensityMapping")
+#' scap_001_mesh <- import_mesh(surface_mesh_path)
+#' landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
+#'                              package = "BoneDensityMapping")
+#' scap_001_lmk <- import_lmks(landmark_path)
+#' template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk, 1000)
+#'
+#' surface_mesh_path <- system.file("extdata", "SCAP002.stl",
+#'                                  package = "BoneDensityMapping")
+#' scap_002_mesh <- import_mesh(surface_mesh_path)
+#' landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
+#'                              package = "BoneDensityMapping")
+#' scap_002_lmk <- import_lmks(landmark_path)
+#' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk, template_coords)
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom stats dist
 #' @export
@@ -395,11 +411,12 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
 
   # closet vertex to landmark
   lmk.add <- NULL
+  landmark_xyz <- as.matrix(landmarks[, c("x", "y", "z")])
   for(i in 1:nrow(landmarks)){
     lmk.add <- rbind(lmk.add,
-                     which.min(sqrt((landmarks[i, 1] - bone[, 1]) ^ 2 +
-                                    (landmarks[i, 2] - bone[, 2]) ^ 2 +
-                                    (landmarks[i, 3] - bone[, 3]) ^ 2))[1])
+                     which.min(sqrt((landmark_xyz[i, 1] - bone[, 1]) ^ 2 +
+                                    (landmark_xyz[i, 2] - bone[, 2]) ^ 2 +
+                                    (landmark_xyz[i, 3] - bone[, 3]) ^ 2))[1])
   }
 
   nlandmarks <- nrow(landmarks)
