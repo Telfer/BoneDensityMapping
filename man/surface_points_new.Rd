@@ -4,7 +4,13 @@
 \alias{surface_points_new}
 \title{New surface points from template}
 \usage{
-surface_points_new(surface_mesh, landmarks, template)
+surface_points_new(
+  surface_mesh,
+  landmarks,
+  template,
+  mirror = FALSE,
+  plot_check = FALSE
+)
 }
 \arguments{
 \item{surface_mesh}{List. Mesh data imported via ply_import function}
@@ -12,6 +18,13 @@ surface_points_new(surface_mesh, landmarks, template)
 \item{landmarks}{Data frame. Contains 3D coords of landmarks}
 
 \item{template}{Data frame. 3D coords of remapped surface points}
+
+\item{mirror}{Logical or character. Set to "x", "y", or "z" to mirror the
+mesh and landmarks across that axis before remapping.}
+
+\item{plot_check}{Logical. If TRUE, generates a 3D plot showing the mirrored
+mesh, mirrored landmarks, remapped surface points, and original template
+points to visually verify correct orientation and laterality.}
 }
 \value{
 Data frame. 3D coords of remapped surface points
@@ -34,7 +47,8 @@ scap_002_mesh <- import_mesh(surface_mesh_path)
 landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
                              package = "BoneDensityMapping")
 scap_002_lmk <- import_lmks(landmark_path)
-scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk, template_coords)
+scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
+  template_coords, mirror = "x", plot_check=TRUE)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com} Adpated from geomorph

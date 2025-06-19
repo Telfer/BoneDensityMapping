@@ -3,6 +3,9 @@
 # add multiple bone scan/mesh/landmark sets
 # optimize surface_normal_intersect
 
+# flip model and landmarks for surface_points_new
+# slice bone input - filled bone; output- data or graph
+
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param landmark_path String. File path to landmark data, .json or .fcsv format
@@ -302,6 +305,11 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #' @param surface_mesh List. Mesh data imported via ply_import function
 #' @param landmarks Data frame. Contains 3D coords of landmarks
 #' @param template Data frame. 3D coords of remapped surface points
+#' @param mirror Logical or character. Set to "x", "y", or "z" to mirror the
+#'  mesh and landmarks across that axis before remapping.
+#' @param plot_check Logical. If TRUE, generates a 3D plot showing the mirrored
+#'  mesh, mirrored landmarks, remapped surface points, and original template
+#'  points to visually verify correct orientation and laterality.
 #' @return Data frame. 3D coords of remapped surface points
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "SCAP001.stl",
@@ -318,12 +326,14 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #' landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
 #'                              package = "BoneDensityMapping")
 #' scap_002_lmk <- import_lmks(landmark_path)
-#' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk, template_coords)
+#' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
+#'   template_coords, mirror = "x", plot_check=TRUE)
 #' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom rgl open3d points3d title3d
 #' @importFrom stats dist
 #' @export
-surface_points_new <- function(surface_mesh, landmarks, template) {
-  ## helper functions
+surface_points_new <- function(surface_mesh, landmarks, template, mirror = FALSE, plot_check = FALSE) {
+  # helper functions
   rotate.mat <- function(M, Y){
     k <- ncol(M)
     M <- cs.scale(M); Y <- cs.scale(Y)
@@ -402,24 +412,46 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
     v%*%rtu
   }
 
-  # format
-  if (is.list(surface_mesh)) {
-    bone <- t(surface_mesh$vb)[, c(1:3)]
-  } else {
-    bone <- surface_mesh
+  # copy inputs to avoid modifying them
+  mesh_input <- surface_mesh
+  lmk_input <- landmarks
+
+  # apply mirroring
+  if (mirror %in% c("x", "y", "z")) {
+    axis_idx <- switch(mirror,
+                       x = 1,
+                       y = 2,
+                       z = 3)
+
+    # Mirror mesh3d or matrix mesh
+    if (is.list(mesh_input) && !is.null(mesh_input$vb)) {
+      mesh_input$vb[axis_idx, ] <- -mesh_input$vb[axis_idx, ]
+    } else {
+      mesh_input[, axis_idx] <- -mesh_input[, axis_idx]
+    }
+
+    # Mirror landmarks dataframe columns x/y/z accordingly
+    axis_name <- mirror
+    lmk_input[[axis_name]] <- -lmk_input[[axis_name]]
   }
 
-  # closet vertex to landmark
+  # format mesh
+  if (is.list(mesh_input)) {
+    bone <- t(mesh_input$vb)[, c(1:3)]
+  } else {
+    bone <- mesh_input
+  }
+
+  # closest vertex to landmark
   lmk.add <- NULL
-  landmark_xyz <- as.matrix(landmarks[, c("x", "y", "z")])
-  for(i in 1:nrow(landmarks)){
+  landmark_xyz <- as.matrix(lmk_input[, c("x", "y", "z")])
+  for(i in 1:nrow(lmk_input)){
     lmk.add <- rbind(lmk.add,
                      which.min(sqrt((landmark_xyz[i, 1] - bone[, 1]) ^ 2 +
-                                    (landmark_xyz[i, 2] - bone[, 2]) ^ 2 +
-                                    (landmark_xyz[i, 3] - bone[, 3]) ^ 2))[1])
+                                      (landmark_xyz[i, 2] - bone[, 2]) ^ 2 +
+                                      (landmark_xyz[i, 3] - bone[, 3]) ^ 2))[1])
   }
-
-  nlandmarks <- nrow(landmarks)
+  nlandmarks <- nrow(lmk_input)
 
   # center bone
   bone_centered <- center(bone)
@@ -434,10 +466,10 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
   spec.surfs <- bone_centered[-lmk.add, ]
   nei <- numeric(dim(template.tps)[1])
   sliders <- matrix(NA, nrow = dim(template.tps)[1], ncol = 3)
-  for (i in 1:dim(template.tps)[1])     {
+  for (i in 1:dim(template.tps)[1]) {
     nei[i] <- which.min(sqrt((template.tps[i, 1] - spec.surfs[, 1]) ^ 2 +
-                             (template.tps[i, 2] - spec.surfs[ ,2]) ^ 2 +
-                             (template.tps[i, 3] - spec.surfs[, 3]) ^ 2))[1]
+                               (template.tps[i, 2] - spec.surfs[ ,2]) ^ 2 +
+                               (template.tps[i, 3] - spec.surfs[, 3]) ^ 2))[1]
     sliders[i,] <- spec.surfs[nei[i], ]
     spec.surfs <- spec.surfs[-nei[i], ]
   }
@@ -450,7 +482,31 @@ surface_points_new <- function(surface_mesh, landmarks, template) {
   selected.out[, 2] <- selected.out[, 2] - (bone_trans[2] * - 1)
   selected.out[, 3] <- selected.out[, 3] - (bone_trans[3] * - 1)
 
-  # return
+  if (!identical(mirror, FALSE) && plot_check) {
+    open3d()
+    shade3d(mesh_input, color = "gray", alpha = 0.2)
+    points3d(as.matrix(lmk_input[, c("x", "y", "z")]), col = "red", size = 2)
+    points3d(selected.out, col = "purple", size = 0.5)
+    points3d(template, col = "green", size = 0.5)
+    title3d(main = "Check: Laterality Alignment Before Un-Mirroring // green = template", col = "black", line = 2)
+  }
+
+  # unmirror if needed
+  if (mirror %in% c("x", "y", "z")) {
+    axis_idx <- switch(mirror, x = 1, y = 2, z = 3)
+    selected.out[, axis_idx] <- -selected.out[, axis_idx]
+  }
+
+  if (plot_check) {
+    open3d()
+    shade3d(surface_mesh, color = "gray", alpha = 0.2)
+    points3d(as.matrix(landmarks[, c("x", "y", "z")]), col = "red", size = 2)
+    points3d(selected.out, col = "purple", size = 0.5)
+    points3d(template, col = "green", size = 0.5)
+    title3d(main = "Check: Completed new surface points", col = "black", line = 2)
+
+  }
+
   return(selected.out)
 }
 
