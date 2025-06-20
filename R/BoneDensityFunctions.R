@@ -214,7 +214,7 @@ bone_scan_check <- function(surface_mesh, nifti) {
 #' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' internal_fill <- fill_bone_points(surface_mesh, 10)
+#' internal_fill <- fill_bone_points(surface_mesh, 5)
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
 #' @export
@@ -870,7 +870,6 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @importFrom methods hasArg
 #' @export
 plot_mesh <- function(surface_mesh, title, density_color = NULL, userMat = NULL) {
-  #ensure formatting
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(vertices), 1)
 
@@ -886,6 +885,297 @@ plot_mesh <- function(surface_mesh, title, density_color = NULL, userMat = NULL)
     mtext(side = 1, title, line = 3)
   })
   if (hasArg(userMat)) {
+    view3d(userMatrix = userMat)
+  }
+}
+
+
+#' internal_points <- fill_bone_points(surface_mesh, spacing = 1)
+#' surface_points <- t(surface_mesh$vb)[, 1:3]
+#' vertex_coords <- rbind(internal_points, surface_points)
+#'
+
+#' Plot bone mesh with a slice plane showing fill points at the slice
+#' @param surface_mesh mesh3d object (surface mesh)
+#' @param vertex_coords matrix of all vertex coords (surface + fill)
+#' @param color_values vector or matrix of colors for each vertex in vertex_coords
+#' @param slice_axis character "x", "y", or "z"
+#' @param slice_percent numeric between 0 and 1, position of slice through bone along axis
+#' @param slice_thickness numeric, thickness of slice slab (in same units as coords)
+#' @param title character plot title
+#' @param units character, axis units (default "mm")
+#' @export
+
+library(rgl)
+library(geometry)
+
+plot_cross_section_points <- function(surface_mesh,
+                                      surface_coords, surface_colors,  # colors unused here
+                                      fill_coords, fill_colors,
+                                      slice_axis = NULL, slice_val = NULL,
+                                      slice_thickness = 1,
+                                      title = "Bone Visualization",
+                                      userMat = NULL) {
+  stopifnot(nrow(fill_coords) == length(fill_colors))
+
+  library(rgl)
+  library(geometry)
+
+  open3d()
+  # Plot the full surface mesh faded gray for context (no surface points)
+  shade3d(surface_mesh, color = "gray", alpha = 0.2)
+
+  if (!is.null(slice_axis) && !is.null(slice_val)) {
+    axis_index <- switch(slice_axis, x = 1, y = 2, z = 3)
+    axis_min <- min(fill_coords[, axis_index])
+    axis_max <- max(fill_coords[, axis_index])
+    coord_val <- axis_min + slice_val * (axis_max - axis_min)
+
+    # Select fill points near the slice
+    keep_fill <- fill_coords[, axis_index] >= (coord_val - slice_thickness / 2) &
+      fill_coords[, axis_index] <= (coord_val + slice_thickness / 2)
+    fill_slice_coords <- fill_coords[keep_fill, , drop = FALSE]
+    fill_slice_colors <- fill_colors[keep_fill]
+
+    # Flatten fill points exactly on the slice plane
+    fill_slice_coords[, axis_index] <- coord_val
+
+    # Project fill points to 2D plane for triangulation
+    other_axes <- setdiff(1:3, axis_index)
+    projected_2d <- fill_slice_coords[, other_axes, drop = FALSE]
+
+    # Triangulate slice points
+    tri <- geometry::delaunayn(projected_2d)
+
+    # Build mesh
+    mesh <- tmesh3d(
+      vertices = t(fill_slice_coords),
+      indices = t(tri),
+      homogeneous = FALSE
+    )
+
+    # Add colors to mesh
+    mesh$material <- list()
+    shade3d(mesh, col = fill_slice_colors, meshColor = "vertices", specular = "black")
+  }
+
+  axes3d(edges = c("x--", "y--", "z--"), nticks = 5, cex = 0.75)
+  mtext3d("X (mm)", edge = "x--", line = 2)
+  mtext3d("Y (mm)", edge = "y--", line = 2)
+  mtext3d("Z (mm)", edge = "z--", line = 2)
+  bgplot3d({
+    plot.new()
+    mtext(title, side = 3, line = 1.5, cex = 1.2)
+  })
+
+  if (!is.null(userMat)) {
+    view3d(userMatrix = userMat)
+  }
+}
+
+
+plot_cross_section <- function(surface_mesh,
+                                       surface_coords, surface_colors,
+                                       fill_coords, fill_colors,
+                                       slice_axis = NULL, slice_val = NULL,
+                                       slice_thickness = 1,
+                                       title = "Bone Visualization",
+                                       userMat = NULL) {
+  stopifnot(nrow(surface_coords) == length(surface_colors))
+  stopifnot(nrow(fill_coords) == length(fill_colors))
+
+  if (!requireNamespace("Rvcg", quietly = TRUE)) {
+    stop("Package 'Rvcg' is required. Please install it with install.packages('Rvcg')")
+  }
+
+  # Early return if no slicing requested
+  if (is.null(slice_axis) || is.null(slice_val)) {
+    open3d()
+    shade3d(surface_mesh, color = "gray", alpha = 0.2)
+    points3d(surface_coords, col = surface_colors, size = 3)
+    title3d(title)
+    return(invisible(NULL))
+  }
+
+  valid_axes <- c(x = 1, y = 2, z = 3)
+  if (!(slice_axis %in% names(valid_axes))) {
+    stop("slice_axis must be one of 'x', 'y', or 'z'")
+  }
+  if (!(slice_val >= 0 && slice_val <= 1)) {
+    stop("slice_val must be between 0 and 1")
+  }
+
+  axis_index <- valid_axes[[slice_axis]]
+
+  combined_coords <- rbind(surface_coords, fill_coords)
+  axis_min <- min(combined_coords[, axis_index])
+  axis_max <- max(combined_coords[, axis_index])
+  coord_val <- axis_min + slice_val * (axis_max - axis_min)
+
+  open3d()
+  # Plot faded full surface mesh for context
+  shade3d(surface_mesh, color = "gray", alpha = 0.2)
+
+  # --- Clip surface mesh ---
+
+  keep_surface <- surface_coords[, axis_index] <= coord_val
+  kept_vertex_indices <- which(keep_surface)
+
+  clipped_vertices <- surface_mesh$vb[, kept_vertex_indices, drop = FALSE]
+  old_faces <- surface_mesh$it
+  is_face_kept <- apply(old_faces, 2, function(f) all(f %in% kept_vertex_indices))
+  clipped_faces <- old_faces[, is_face_kept, drop = FALSE]
+
+  # Reindex faces to new vertex indices
+  vertex_map <- integer(max(kept_vertex_indices))
+  vertex_map[kept_vertex_indices] <- seq_along(kept_vertex_indices)
+  clipped_faces <- matrix(vertex_map[clipped_faces], nrow = 3)
+
+  clipped_surface_colors <- surface_colors[kept_vertex_indices]
+
+  clipped_surface_mesh <- surface_mesh
+  clipped_surface_mesh$vb <- clipped_vertices
+  clipped_surface_mesh$it <- clipped_faces
+  clipped_surface_mesh$material <- list()
+
+  clipped_surface_mesh <- Rvcg::vcgClean(clipped_surface_mesh, sel = 0)
+  clipped_surface_mesh <- Rvcg::vcgUpdateNormals(clipped_surface_mesh)
+
+  shade3d(clipped_surface_mesh, meshColor = "vertices", col = clipped_surface_colors,
+          specular = "black", smooth = TRUE)
+
+  # --- Fill slice mesh ---
+
+  keep_fill <- fill_coords[, axis_index] >= (coord_val - slice_thickness / 2) &
+    fill_coords[, axis_index] <= (coord_val + slice_thickness / 2)
+  fill_slice_coords <- fill_coords[keep_fill, , drop = FALSE]
+  fill_slice_colors <- fill_colors[keep_fill]
+
+  if (nrow(fill_slice_coords) < 3) {
+    message("Not enough fill points in slice to build mesh")
+  } else {
+    fill_slice_coords[, axis_index] <- coord_val
+    other_axes <- setdiff(1:3, axis_index)
+    projected_2d <- fill_slice_coords[, other_axes, drop = FALSE]
+
+    tri <- geometry::delaunayn(projected_2d)
+    if (is.null(tri)) {
+      message("Triangulation failed for slice points")
+    } else {
+      slice_mesh <- tmesh3d(vertices = t(fill_slice_coords), indices = t(tri), homogeneous = FALSE)
+      slice_mesh$material <- list()
+      shade3d(slice_mesh, meshColor = "vertices", col = fill_slice_colors,
+              specular = "black", smooth = TRUE)
+    }
+  }
+
+  # --- Axes and title ---
+
+  axes3d(edges = c("x--", "y--", "z--"), nticks = 5, cex = 0.75)
+  mtext3d("X (mm)", edge = "x--", line = 2)
+  mtext3d("Y (mm)", edge = "y--", line = 2)
+  mtext3d("Z (mm)", edge = "z--", line = 2)
+
+  bgplot3d({
+    plot.new()
+    mtext(title, side = 3, line = 1.5, cex = 1.2)
+  })
+
+  if (!is.null(userMat)) {
+    view3d(userMatrix = userMat)
+  }
+}
+
+plot_cross_section_points2 <- function(surface_mesh,
+                                      surface_coords, surface_colors,
+                                      fill_coords, fill_colors,
+                                      slice_axis = NULL, slice_val = NULL,
+                                      slice_thickness = 1,
+                                      title = "Bone Visualization",
+                                      userMat = NULL,
+                                      debug_plot = FALSE) {
+  stopifnot(nrow(fill_coords) == length(fill_colors))
+
+  library(rgl)
+  library(geometry)
+  library(concaveman)
+  if (debug_plot) library(ggplot2)
+
+  open3d()
+  shade3d(surface_mesh, color = "gray", alpha = 0.2)
+
+  if (!is.null(slice_axis) && !is.null(slice_val)) {
+    axis_index <- switch(slice_axis, x = 1, y = 2, z = 3)
+    axis_min <- min(fill_coords[, axis_index])
+    axis_max <- max(fill_coords[, axis_index])
+    coord_val <- axis_min + slice_val * (axis_max - axis_min)
+
+    keep_fill <- fill_coords[, axis_index] >= (coord_val - slice_thickness / 2) &
+      fill_coords[, axis_index] <= (coord_val + slice_thickness / 2)
+    fill_slice_coords <- fill_coords[keep_fill, , drop = FALSE]
+    fill_slice_colors <- fill_colors[keep_fill]
+
+    fill_slice_coords[, axis_index] <- coord_val
+    other_axes <- setdiff(1:3, axis_index)
+    projected_2d <- fill_slice_coords[, other_axes, drop = FALSE]
+
+    if (nrow(projected_2d) >= 3) {
+      # Step 1: Compute concave hull
+      hull_coords <- concaveman(projected_2d)
+
+      # Step 2: Delaunay triangulation of projected points
+      tri <- delaunayn(projected_2d)
+
+      # Step 3: Keep only triangles inside the concave polygon
+      keep_tri <- sapply(1:nrow(tri), function(i) {
+        idx <- tri[i, ]
+        tri_coords <- projected_2d[idx, , drop = FALSE]
+        centroid <- colMeans(tri_coords)
+        point.in.polygon(centroid[1], centroid[2], hull_coords[,1], hull_coords[,2]) > 0
+      })
+
+      tri_filtered <- tri[keep_tri, , drop = FALSE]
+
+      # Step 4: Build 3D mesh
+      if (nrow(tri_filtered) >= 1) {
+        mesh <- tmesh3d(
+          vertices = t(fill_slice_coords),
+          indices = t(tri_filtered),
+          homogeneous = FALSE
+        )
+
+        mesh$material <- list()
+        shade3d(mesh, col = fill_slice_colors, meshColor = "vertices", specular = "black")
+      }
+    }
+
+    # Optional: ggplot2 debug plot
+    if (debug_plot && nrow(projected_2d) > 0) {
+      df_debug <- data.frame(
+        x = projected_2d[, 1],
+        y = projected_2d[, 2],
+        color = fill_slice_colors
+      )
+      ggplot(df_debug, aes(x = x, y = y, color = color)) +
+        geom_point(size = 1.5) +
+        geom_polygon(data = data.frame(hull_coords), aes(x = X1, y = X2),
+                     inherit.aes = FALSE, fill = NA, color = "black") +
+        coord_fixed() +
+        theme_minimal() +
+        labs(title = "2D Projected Fill Points with Concave Hull")
+    }
+  }
+
+  axes3d(edges = c("x--", "y--", "z--"), nticks = 5, cex = 0.75)
+  mtext3d("X (mm)", edge = "x--", line = 2)
+  mtext3d("Y (mm)", edge = "y--", line = 2)
+  mtext3d("Z (mm)", edge = "z--", line = 2)
+  bgplot3d({
+    plot.new()
+    mtext(title, side = 3, line = 1.5, cex = 1.2)
+  })
+
+  if (!is.null(userMat)) {
     view3d(userMatrix = userMat)
   }
 }
