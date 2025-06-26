@@ -1,10 +1,8 @@
-# To-do
-# add .nrrd compatibility
-# add multiple bone scan/mesh/landmark sets
-# optimize surface_normal_intersect
-
-# flip model and landmarks for surface_points_new
-# slice bone input - filled bone; output- data or graph
+## To-do
+# embed color bar
+# nrrd conversion bad
+# loop example scap
+# mesh template match helper function
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -56,7 +54,7 @@ import_lmks <- function(landmark_path) {
 #' @examples
 #' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
 #'                          package = "BoneDensityMapping")
-#' import_scan(scan_filepath)
+#' nifti2 <- import_scan(scan_filepath)
 #' @importFrom oro.nifti readNIfTI nifti
 #' @importFrom nat read.nrrd
 #' @export
@@ -65,7 +63,7 @@ import_scan <- function(scan_filepath) {
 
   if (file_type == "nii" | file_type == "nrrd") {
     if (file_type == "nii") {
-      nifti_scan <- readNIfTI(scan_filepath)
+      nifti_scan <- readNIfTI(scan_filepath, reorient = FALSE)
     }
     if (file_type == "nrrd") {
       nrrd <- read.nrrd(scan_filepath)
@@ -75,6 +73,101 @@ import_scan <- function(scan_filepath) {
   else {
     stop("Unsupported file type: must be .nii or .nrrd")
   }
+  return(nifti_scan)
+}
+
+#' import CT scan
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
+#' @param scan_filepath String. File path to CT scan data. Should be .nii or .nrrd
+#' @return scan object
+#' @examples
+#' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
+#'                          package = "BoneDensityMapping")
+#' import_scan(scan_filepath)
+#' @importFrom oro.nifti readNIfTI nifti
+#' @importFrom nat.nblast
+#' @export
+import_scan2 <- function(scan_filepath) {
+  file_type <- tools::file_ext(scan_filepath)
+
+  if (file_type == "nii") {
+    nifti_scan <- oro.nifti::readNIfTI(scan_filepath)
+
+    # Fix orientation to match NRRD convention (flip X and Y axes)
+    # Extract image data
+    img_data <- oro.nifti::img_data(nifti_scan)
+
+    # Flip X and Y axes (i.e., dims 1 and 2)
+    img_data <- img_data[dim(img_data)[1]:1, dim(img_data)[2]:1, , drop=FALSE]
+
+    # Update the image data in nifti_scan
+    nifti_scan <- oro.nifti::nifti(img = img_data)
+
+    # Now adjust srow_x/y/z and qoffset_x/y/z accordingly (flip sign for X and Y)
+    # Extract affine info from original nifti_scan
+    # Note: you might want to read original affine before overwriting
+
+    # Assuming original nifti_scan still accessible:
+    original_nifti <- oro.nifti::readNIfTI(scan_filepath)
+    affine <- rbind(
+      original_nifti@srow_x,
+      original_nifti@srow_y,
+      original_nifti@srow_z
+    )
+
+    # Flip the sign of first two columns (X and Y directions)
+    affine[, 1:2] <- -affine[, 1:2]
+
+    # Flip the offsets (4th column) for X and Y
+    affine[1:2, 4] <- -affine[1:2, 4]
+
+    nifti_scan@srow_x <- affine[1, ]
+    nifti_scan@srow_y <- affine[2, ]
+    nifti_scan@srow_z <- affine[3, ]
+
+    nifti_scan@qoffset_x <- affine[1, 4]
+    nifti_scan@qoffset_y <- affine[2, 4]
+    nifti_scan@qoffset_z <- affine[3, 4]
+
+    nifti_scan@qform_code <- 1
+  } else if (file_type == "nrrd") {
+    nrrd <- read.nrrd(scan_filepath)
+
+    header <- attr(nrrd, "header")
+    space_dirs <- header$`space directions`
+    origin <- header$`space origin`
+
+    if (is.null(space_dirs) || is.null(origin)) {
+      stop("Missing 'space directions' or 'space origin' in NRRD header.")
+    }
+
+    # Flip X (L → R) and Y (P → A)
+    space_dirs[ , 1:2] <- -space_dirs[ , 1:2]  # flip X and Y axes
+    origin[1:2] <- -origin[1:2]                # flip X and Y offsets
+
+    # Convert to NIfTI
+    nifti_scan <- oro.nifti::nifti(img = nrrd)
+
+    # Assign affine matrix (srow_x/y/z)
+    affine <- matrix(0, nrow = 3, ncol = 4)
+    affine[, 1:3] <- space_dirs
+    affine[, 4] <- origin
+
+    nifti_scan@srow_x <- affine[1, ]
+    nifti_scan@srow_y <- affine[2, ]
+    nifti_scan@srow_z <- affine[3, ]
+
+    # Assign qoffsets
+    nifti_scan@qoffset_x <- origin[1]
+    nifti_scan@qoffset_y <- origin[2]
+    nifti_scan@qoffset_z <- origin[3]
+
+    # Tell NIfTI to use affine
+    nifti_scan@qform_code <- 1
+  } else {
+    stop("Unsupported file type: must be .nii or .nrrd")
+  }
+
   return(nifti_scan)
 }
 
@@ -152,7 +245,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' bone_scan_check(surface_mesh, nifti)
+#' bone_scan_check(surface_mesh, nifti2)
 #' @export
 bone_scan_check <- function(surface_mesh, nifti) {
 
@@ -167,11 +260,11 @@ bone_scan_check <- function(surface_mesh, nifti) {
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
   dims <- dim(img_data)
-  x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = niftiHeader(nifti)$srow_x[1] * -1,
+  x_seq <- seq((nifti)@qoffset_x * -1, by = (nifti)@srow_x[1] * -1,
                length.out = dims[1])
-  y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = niftiHeader(nifti)$srow_y[2] * -1,
+  y_seq <- seq((nifti)@qoffset_y * -1, by = (nifti)@srow_y[2] * -1,
                length.out = dims[2])
-  z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = niftiHeader(nifti)$srow_z[3],
+  z_seq <- seq((nifti)@qoffset_z, by = (nifti)@srow_z[3],
                length.out = dims[3])
 
   # check bone is within scan volume
@@ -214,7 +307,7 @@ bone_scan_check <- function(surface_mesh, nifti) {
 #' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' internal_fill <- fill_bone_points(surface_mesh, 5)
+#' internal_fill <- fill_bone_points(surface_mesh, 3)
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
 #' @export
@@ -555,23 +648,23 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
   dims <- dim(img_data)
-  x_by <- niftiHeader(nifti)$srow_x[1]
-  y_by <- niftiHeader(nifti)$srow_y[2]
-  z_by <- niftiHeader(nifti)$srow_z[3]
+  x_by <- (nifti)@srow_x[1]
+  y_by <- (nifti)@srow_y[2]
+  z_by <- (nifti)@srow_z[3]
   if (rev_x == TRUE) {
-    x_seq <- rev(seq(niftiHeader(nifti)$qoffset_x * -1, by = x_by * -1, length.out = dims[1]))
+    x_seq <- rev(seq(nifti@qoffset_x * -1, by = x_by * -1, length.out = dims[1]))
   } else {
-    x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = x_by * -1, length.out = dims[1])
+    x_seq <- seq((nifti)@qoffset_x * -1, by = x_by * -1, length.out = dims[1])
   }
   if (rev_y == TRUE) {
-    y_seq <- rev(seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
+    y_seq <- rev(seq((nifti)@qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
   } else {
-    y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = y_by * -1, length.out = dims[2])
+    y_seq <- seq((nifti)@qoffset_y * -1, by = y_by * -1, length.out = dims[2])
   }
   if (rev_z == TRUE) {
-    z_seq <- rev(seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3]))
+    z_seq <- rev(seq((nifti)@qoffset_z, by = z_by, length.out = dims[3]))
   } else {
-    z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = z_by, length.out = dims[3])
+    z_seq <- seq((nifti)@qoffset_z, by = z_by, length.out = dims[3])
   }
 
   # check bone is within scan volume
@@ -601,7 +694,6 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 
     Scan_Min = c(vol_x_min, vol_y_min, vol_z_min),
     Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
   )
-  print(df, digits = 3)
   if (!all(vals)) {stop("Mesh not within scan volume")}
 
   # Find voxels intercepted by line
@@ -816,15 +908,12 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' nifti <- import_scan(nifti_path)
 #' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
 #' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
-#' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+#' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=1000, mini=0)
 #' @importFrom Rvcg vcgPlyWrite
 #' @export
 color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
                        mini = 0, export_path) {
-  # this function
-  # then use plot<-color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
-  # shade3d(plot)
-  # mesh match
+
   mesh_match <- mesh_template_match(surface_mesh, template_pts)
 
   # color
@@ -860,20 +949,21 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' landmarks <- import_lmks(landmark_path)
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii",
 #'                           package = "BoneDensityMapping")
-#' nifti <- import_scan(nifti_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
-#' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' nifti <- nifti1
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10000)
+#' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0,
+#' nifti1, rev_y=TRUE)
 #' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
-#' plot <- plot_mesh(colored_mesh, "Femur Bone Density")
+#' plot <- plot_mesh(colored_mesh)
 #' @importFrom rgl shade3d view3d bgplot3d
 #' @importFrom graphics plot.new mtext
 #' @importFrom methods hasArg
 #' @export
-plot_mesh <- function(surface_mesh, title, density_color = NULL, userMat = NULL) {
+plot_mesh <- function(surface_mesh, density_color = NULL, title, userMat = NULL) {
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(vertices), 1)
 
-  if (!missing(density_color)) {
+  if (!is.null(density_color)) {
     surface_mesh$material <- list(color = density_color)
     shade3d(surface_mesh, meshColor = "vertices", main = "Age", specular = 'black')
   } else {
@@ -890,122 +980,81 @@ plot_mesh <- function(surface_mesh, title, density_color = NULL, userMat = NULL)
 }
 
 
-#' internal_points <- fill_bone_points(surface_mesh, spacing = 1)
-#' surface_points <- t(surface_mesh$vb)[, 1:3]
-#' vertex_coords <- rbind(internal_points, surface_points)
-library(rgl)
-library(geometry)
-
-
-plot_cross_section_slice <- function(surface_mesh,
-                                      surface_coords, surface_colors,
-                                      fill_coords, fill_colors,
-                                      slice_axis = NULL, slice_val = NULL,
-                                      slice_thickness = 1,
-                                      title = "Bone Visualization",
-                                      userMat = NULL) {
-  stopifnot(nrow(fill_coords) == length(fill_colors))
-
-  library(rgl)
-  library(geometry)
-  library(concaveman)
-
-  open3d()
-  shade3d(surface_mesh, color = "gray", alpha = 0.2)
-
-  if (!is.null(slice_axis) && !is.null(slice_val)) {
-    axis_index <- switch(slice_axis, x = 1, y = 2, z = 3)
-    axis_min <- min(fill_coords[, axis_index])
-    axis_max <- max(fill_coords[, axis_index])
-    coord_val <- axis_min + slice_val * (axis_max - axis_min)
-
-    keep_fill <- fill_coords[, axis_index] >= (coord_val - slice_thickness / 2) &
-      fill_coords[, axis_index] <= (coord_val + slice_thickness / 2)
-    fill_slice_coords <- fill_coords[keep_fill, , drop = FALSE]
-    fill_slice_colors <- fill_colors[keep_fill]
-
-    fill_slice_coords[, axis_index] <- coord_val
-    other_axes <- setdiff(1:3, axis_index)
-    projected_2d <- fill_slice_coords[, other_axes, drop = FALSE]
-
-    if (nrow(projected_2d) >= 3) {
-      # Step 1: Compute concave hull
-      hull_coords <- concaveman(projected_2d)
-
-      # Step 2: Delaunay triangulation of projected points
-      tri <- delaunayn(projected_2d)
-
-      # Step 3: Keep only triangles inside the concave polygon
-      keep_tri <- sapply(1:nrow(tri), function(i) {
-        idx <- tri[i, ]
-        tri_coords <- projected_2d[idx, , drop = FALSE]
-        centroid <- colMeans(tri_coords)
-        point.in.polygon(centroid[1], centroid[2], hull_coords[,1], hull_coords[,2]) > 0
-      })
-
-      tri_filtered <- tri[keep_tri, , drop = FALSE]
-
-      # Step 4: Build 3D mesh
-      if (nrow(tri_filtered) >= 1) {
-        mesh <- tmesh3d(
-          vertices = t(fill_slice_coords),
-          indices = t(tri_filtered),
-          homogeneous = FALSE
-        )
-
-        mesh$material <- list()
-        shade3d(mesh, col = fill_slice_colors, meshColor = "vertices", specular = "black")
-      }
-    }
-  }
-
-  axes3d(edges = c("x--", "y--", "z--"), nticks = 5, cex = 0.75)
-  mtext3d("X (mm)", edge = "x--", line = 2)
-  mtext3d("Y (mm)", edge = "y--", line = 2)
-  mtext3d("Z (mm)", edge = "z--", line = 2)
-  bgplot3d({
-    plot.new()
-    mtext(title, side = 3, line = 1.5, cex = 1.2)
-  })
-
-  if (!is.null(userMat)) {
-    view3d(userMatrix = userMat)
-  }
-}
-
+#' Plot Cross-Sectional Bone Visualization in 3D
+#'
+#' Visualizes a 3D cross-section of a bone using surface mesh and internal density (fill) points.
+#' Clips the surface mesh at a given axis and value, and overlays a 2D projection of internal density.
+#'
+#' @param surface_mesh A `mesh3d` object representing the outer surface of the bone.
+#' @param surface_colors Optional. A vector of colors for each vertex of the surface mesh. If NULL, uses mesh's own material colors.
+#' @param fill_coords A numeric matrix of internal fill point coordinates.
+#' @param fill_colors A vector of colors corresponding to fill points.
+#' @param slice_axis Character. `'x'`, `'y'`, or `'z'`. Axis along which to slice.
+#' @param slice_val Numeric (0 to 1). Relative slice location along selected axis.
+#' @param slice_thickness Numeric. Width of the slice (default = 1).
+#' @param IncludeSurface Logical. Whether to include the clipped surface mesh.
+#' @param title Character. Title for the plot.
+#' @param userMat Optional. A 4x4 matrix controlling view orientation.
+#' @return Generates an `rgl` plot
+#' @examples
+#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+#'                                  package = "BoneDensityMapping")
+#' surface_mesh <- import_mesh(surface_mesh_path)
+#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                              package = "BoneDensityMapping")
+#' landmarks <- import_lmks(landmark_path)
+#' nifti_path <- system.file("extdata", "test_CT_hip.nii",
+#'                           package = "BoneDensityMapping")
+#' nifti <- import_scan(nifti_path)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
+#' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
+#'
+#' internal_fill <- fill_bone_points(surface_mesh, 3)
+#' internal_density <- voxel_point_intersect(internal_fill, nifti)
+#' internal_colors <- color_mapping(internal_density)
+#' plot_cross_section_bone(colored_mesh, surface_colors = NULL, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5)
+#' @import rgl
+#' @import geometry
+#' @import concaveman
+#' @import sp
+#' @export
 plot_cross_section_bone <- function(surface_mesh,
-                                       surface_coords, surface_colors,
-                                       fill_coords, fill_colors,
-                                       slice_axis = NULL, slice_val = NULL,
-                                       slice_thickness = 1, IncludeSurface = TRUE,
-                                       title = "Bone Visualization",
-                                       userMat = NULL) {
+                                    surface_colors = NULL,
+                                    fill_coords, fill_colors,
+                                    slice_axis, slice_val,
+                                    slice_thickness = 1, IncludeSurface = TRUE,
+                                    title = "Bone Cross-Section",
+                                    userMat = NULL) {
   stopifnot(nrow(fill_coords) == length(fill_colors))
-  stopifnot(nrow(surface_coords) == length(surface_colors))
-
-  library(rgl)
-  library(geometry)
-  library(concaveman)
-  library(sp)  # for point.in.polygon
-
   if (is.null(slice_axis) || is.null(slice_val)) {
     stop("slice_axis and slice_val must be provided")
   }
 
-  # Define axis index and slice coordinate
-  axis_index <- switch(slice_axis, x = 1, y = 2, z = 3)
-  axis_min <- min(fill_coords[, axis_index])
-  axis_max <- max(fill_coords[, axis_index])
-  coord_val <- axis_min + slice_val * (axis_max - axis_min)
+  library(rgl)
+  library(geometry)
+  library(concaveman)
+  library(sp)
+
+  axis_index <- switch(slice_axis, x = 1, y = 2, z = 3,
+                       stop("slice_axis must be one of 'x', 'y', or 'z'"))
+
+  # Extract surface coordinates
+  surface_coords <- t(surface_mesh$vb[1:3, , drop = FALSE])
+
+  if (is.null(surface_colors) && !is.null(surface_mesh$material$color)) {
+    surface_colors <- surface_mesh$material$color
+  }
+
+  # Compute slice value from relative position
+  coord_val <- min(fill_coords[, axis_index]) +
+    slice_val * (max(fill_coords[, axis_index]) - min(fill_coords[, axis_index]))
 
   open3d()
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
 
-  if (IncludeSurface == TRUE) {
-    # --- Clip surface mesh behind slice ---
-    keep_surface <- surface_coords[, axis_index] <= coord_val
-    kept_vertex_indices <- which(keep_surface)
-
+  # Clip surface
+  if (IncludeSurface) {
     keep_surface <- surface_coords[, axis_index] <= coord_val
     kept_vertex_indices <- which(keep_surface)
 
@@ -1013,38 +1062,36 @@ plot_cross_section_bone <- function(surface_mesh,
       clipped_vertices <- surface_mesh$vb[, kept_vertex_indices, drop = FALSE]
       old_faces <- surface_mesh$it
 
-      # Create a logical vector for quick membership test
       is_vertex_kept <- rep(FALSE, max(old_faces))
       is_vertex_kept[kept_vertex_indices] <- TRUE
 
-      # Vectorized: keep faces only if all 3 vertices are kept
-      faces_kept_logical <- colSums(matrix(is_vertex_kept[old_faces], nrow=3)) == 3
+      faces_kept_logical <- colSums(matrix(is_vertex_kept[old_faces], nrow = 3)) == 3
       clipped_faces <- old_faces[, faces_kept_logical, drop = FALSE]
 
-      # Reindex faces (map old vertex indices to new ones)
       vertex_map <- integer(max(old_faces))
       vertex_map[kept_vertex_indices] <- seq_along(kept_vertex_indices)
       clipped_faces <- matrix(vertex_map[clipped_faces], nrow = 3)
 
-      clipped_surface_colors <- surface_colors[kept_vertex_indices]
+      clipped_surface_colors <- if (!is.null(surface_colors)) {
+        surface_colors[kept_vertex_indices]
+      } else {
+        "gray"
+      }
 
       clipped_surface_mesh <- surface_mesh
       clipped_surface_mesh$vb <- clipped_vertices
       clipped_surface_mesh$it <- clipped_faces
       clipped_surface_mesh$material <- list()
 
-      if (!requireNamespace("Rvcg", quietly = TRUE)) {
-        stop("Please install the 'Rvcg' package")
-      }
       clipped_surface_mesh <- Rvcg::vcgClean(clipped_surface_mesh, sel = 0)
       clipped_surface_mesh <- Rvcg::vcgUpdateNormals(clipped_surface_mesh)
 
-      shade3d(clipped_surface_mesh, meshColor = "vertices", col = clipped_surface_colors,
-              specular = "black", smooth = TRUE)
+      shade3d(clipped_surface_mesh, meshColor = "vertices",
+              col = clipped_surface_colors, specular = "black", smooth = TRUE)
     }
   }
 
-  # --- Slice fill mesh ---
+  # Slice fill
   keep_fill <- fill_coords[, axis_index] >= (coord_val - slice_thickness / 2) &
     fill_coords[, axis_index] <= (coord_val + slice_thickness / 2)
   fill_slice_coords <- fill_coords[keep_fill, , drop = FALSE]
@@ -1073,17 +1120,11 @@ plot_cross_section_bone <- function(surface_mesh,
         indices = t(tri_filtered),
         homogeneous = FALSE
       )
-
       mesh$material <- list()
       shade3d(mesh, col = fill_slice_colors, meshColor = "vertices", specular = "black")
     }
   }
 
-  # Axes and title
-  axes3d(edges = c("x--", "y--", "z--"), nticks = 5, cex = 0.75)
-  mtext3d("X (mm)", edge = "x--", line = 2)
-  mtext3d("Y (mm)", edge = "y--", line = 2)
-  mtext3d("Z (mm)", edge = "z--", line = 2)
   bgplot3d({
     plot.new()
     mtext(title, side = 3, line = 1.5, cex = 1.2)
@@ -1093,6 +1134,7 @@ plot_cross_section_bone <- function(surface_mesh,
     view3d(userMatrix = userMat)
   }
 }
+
 
 
 
@@ -1107,7 +1149,7 @@ plot_cross_section_bone <- function(surface_mesh,
 #' @param plot Logical
 #' @examples
 #' colors <- c("darkblue", "blue", "lightblue", "green", "yellow", "red", "pink")
-#' color_bar(colors, 0, 1, breaks = c(0, 0.25, 0.5, 0.75, 1))
+#' color_bar(colors, 0, 2000, breaks = c(0, 500, 1000, 1500, 2000))
 #' @importFrom ggplot2 ggplot unit labs guides theme element_text geom_point aes scale_color_gradientn guide_colorbar
 #' @importFrom cowplot get_legend
 #' @importFrom ggpubr as_ggplot
