@@ -63,7 +63,7 @@ import_scan <- function(scan_filepath) {
 
   if (file_type == "nii" | file_type == "nrrd") {
     if (file_type == "nii") {
-      nifti_scan <- readNIfTI(scan_filepath, reorient = FALSE)
+      nifti_scan <- readNIfTI(scan_filepath, reorient = TRUE)
     }
     if (file_type == "nrrd") {
       nrrd <- read.nrrd(scan_filepath)
@@ -949,10 +949,10 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' landmarks <- import_lmks(landmark_path)
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii",
 #'                           package = "BoneDensityMapping")
-#' nifti <- nifti1
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 10000)
+#' nifti <- import_scan(nifti_path)
+#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 1000)
 #' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0,
-#' nifti1, rev_y=TRUE)
+#' nifti, rev_y=TRUE)
 #' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
 #' plot <- plot_mesh(colored_mesh)
 #' @importFrom rgl shade3d view3d bgplot3d
