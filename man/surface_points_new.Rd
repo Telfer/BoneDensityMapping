@@ -48,7 +48,7 @@ landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
                              package = "BoneDensityMapping")
 scap_002_lmk <- import_lmks(landmark_path)
 scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
-  template_coords, mirror = "x", plot_check=TRUE)
+  template_coords, mirror = "x", plot_check = FALSE)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com} Adpated from geomorph

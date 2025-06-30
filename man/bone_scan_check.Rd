@@ -7,13 +7,13 @@
 bone_scan_check(surface_mesh, nifti)
 }
 \arguments{
-\item{surface_mesh}{A 3D mesh object (class \code{mesh3d}) or a numeric
-matrix/data frame of vertex coordinates (with columns representing X, Y, and Z).}
+\item{surface_mesh}{mesh object (class \code{mesh3d}) or numeric
+matrix/dataframe of vertex coordinates (cols: X, Y, Z).}
 
-\item{nifti}{A NIfTI image object representing a CT scan.}
+\item{nifti}{NIfTI image object representing CT scan.}
 }
 \value{
-If all vertices are inside the scan volume, the function prints a summary
+If mesh is inside the scan volume, the function prints a summary
   of the mesh and scan bounds. If any vertices lie outside the scan volume, it
   raises an error.
 }

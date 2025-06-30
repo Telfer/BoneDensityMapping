@@ -3,10 +3,11 @@
 # nrrd conversion - done
 # loop example scap - done
 # color_mesh confusing roxygen
+#mapped coords?
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param landmark_path String. File path to landmark data, .json or .fcsv format
+#' @param landmark_path String. File path to landmark data. .json or .fcsv format
 #' @return dataframe. Columns are landmark name, x, y, and z coordinates
 #' @examples
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json",
@@ -41,8 +42,6 @@ import_lmks <- function(landmark_path) {
   } else {
     stop("Unsupported file type: must be .json or .fcsv")
   }
-
-  # return
   return(df)
 }
 
@@ -107,7 +106,7 @@ import_scan <- function(scan_filepath) {
 
 #' import surface mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh_filepath String. File path to CT scan data. Should be .stl or .ply
+#' @param surface_mesh_filepath String. File path to CT scan data. .stl or .ply
 #' @return mesh object
 #' @examples
 #' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
@@ -119,7 +118,6 @@ import_mesh <- function(surface_mesh_filepath) {
   # import scan
   surface_mesh <- vcgImport(surface_mesh_filepath)
 
-  # return
   return(surface_mesh)
 }
 
@@ -154,21 +152,20 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
     dists <- c(dists, min(x))
   }
 
-  # return message if landmarks not on bone surface
   if (any(dists > threshold)) {
     bad_ids <- landmarks$lmk_id[dists > threshold]
-    message("landmarks not on bone surface: ", paste(bad_ids, collapse = ", "))
+    message("Landmarks not on bone surface: ", paste(bad_ids, collapse = ", "))
   }
-  else message("landmarks are on bone surface")
+  else message("Landmarks are on bone surface.")
 }
 
 
 #' Check if mesh or vertex coordinates are fully contained within scan volume
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh A 3D mesh object (class \code{mesh3d}) or a numeric
-#'    matrix/data frame of vertex coordinates (with columns representing X, Y, and Z).
-#' @param nifti A NIfTI image object representing a CT scan.
-#' @return If all vertices are inside the scan volume, the function prints a summary
+#' @param surface_mesh mesh object (class \code{mesh3d}) or numeric
+#'    matrix/dataframe of vertex coordinates (cols: X, Y, Z).
+#' @param nifti NIfTI image object representing CT scan.
+#' @return If mesh is inside the scan volume, the function prints a summary
 #'   of the mesh and scan bounds. If any vertices lie outside the scan volume, it
 #'   raises an error.
 #' @examples
@@ -228,7 +225,7 @@ bone_scan_check <- function(surface_mesh, nifti) {
     Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
   )
   print(df, digits = 3)
-  if (!all(vals)) {stop("Mesh not within scan volume")}
+  if (!all(vals)) {stop("Mesh not within scan volume.")}
 }
 
 
@@ -245,7 +242,6 @@ bone_scan_check <- function(surface_mesh, nifti) {
 #' @importFrom stats runif
 #' @export
 fill_bone_points <- function(surface_mesh, spacing) {
-  # verts
   vertices <- t(surface_mesh$vb)[, 1:3]
   faces <- t(surface_mesh$it)
 
@@ -273,11 +269,11 @@ fill_bone_points <- function(surface_mesh, spacing) {
   noise_mat <- matrix(noise, nrow = dims[1], ncol = dims[2])
   in_coords <- in_coords + noise_mat
 
-  # return
   return(in_coords)
 }
 
-#' Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
+#' redefine surface points. Adds additional surface points (“sliders”)
+#' that are spatially distributed across the mesh surface.
 #' @author Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
 #' @param surface_mesh Mesh object
 #' @param landmarks Data frame with landmark coordinates (columns: ID, x, y, z)
@@ -321,7 +317,6 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
                               kmeans(x = vertices, centers = no_surface_sliders,
                                      iter.max = 25)$centers)
 
-  # return
   return(as.data.frame(new_surface_points))
 }
 
@@ -353,7 +348,7 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #'                              package = "BoneDensityMapping")
 #' scap_002_lmk <- import_lmks(landmark_path)
 #' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
-#'   template_coords, mirror = "x", plot_check=TRUE)
+#'   template_coords, mirror = "x", plot_check = FALSE)
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom rgl open3d points3d title3d
 #' @importFrom stats dist
