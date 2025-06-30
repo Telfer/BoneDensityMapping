@@ -1,8 +1,8 @@
 ## To-do
-# embed color bar
-# nrrd conversion bad
-# loop example scap
-# mesh template match helper function
+# embed color bar - done
+# nrrd conversion - done
+# loop example scap - done
+# color_mesh confusing roxygen
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -46,36 +46,6 @@ import_lmks <- function(landmark_path) {
   return(df)
 }
 
-
-#' import CT scan
-#' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param scan_filepath String. File path to CT scan data. Should be .nii or .nrrd
-#' @return scan object
-#' @examples
-#' scan_filepath <- system.file("extdata", "test_CT_hip.nii",
-#'                          package = "BoneDensityMapping")
-#' nifti2 <- import_scan(scan_filepath)
-#' @importFrom oro.nifti readNIfTI nifti
-#' @importFrom nat read.nrrd
-#' @export
-import_scan <- function(scan_filepath) {
-  file_type <- file_ext(scan_filepath)
-
-  if (file_type == "nii" | file_type == "nrrd") {
-    if (file_type == "nii") {
-      nifti_scan <- readNIfTI(scan_filepath, reorient = TRUE)
-    }
-    if (file_type == "nrrd") {
-      nrrd <- read.nrrd(scan_filepath)
-      nifti_scan <- nifti(img = nrrd)
-    }
-  }
-  else {
-    stop("Unsupported file type: must be .nii or .nrrd")
-  }
-  return(nifti_scan)
-}
-
 #' import CT scan
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param scan_filepath String. File path to CT scan data. Should be .nii or .nrrd
@@ -85,51 +55,14 @@ import_scan <- function(scan_filepath) {
 #'                          package = "BoneDensityMapping")
 #' import_scan(scan_filepath)
 #' @importFrom oro.nifti readNIfTI nifti
-#' @importFrom nat.nblast
+#' @importFrom nat read.nrrd
 #' @export
-import_scan2 <- function(scan_filepath) {
+import_scan <- function(scan_filepath) {
   file_type <- tools::file_ext(scan_filepath)
 
   if (file_type == "nii") {
-    nifti_scan <- oro.nifti::readNIfTI(scan_filepath)
+    nifti_scan <- oro.nifti::readNIfTI(scan_filepath, reorient = FALSE)
 
-    # Fix orientation to match NRRD convention (flip X and Y axes)
-    # Extract image data
-    img_data <- oro.nifti::img_data(nifti_scan)
-
-    # Flip X and Y axes (i.e., dims 1 and 2)
-    img_data <- img_data[dim(img_data)[1]:1, dim(img_data)[2]:1, , drop=FALSE]
-
-    # Update the image data in nifti_scan
-    nifti_scan <- oro.nifti::nifti(img = img_data)
-
-    # Now adjust srow_x/y/z and qoffset_x/y/z accordingly (flip sign for X and Y)
-    # Extract affine info from original nifti_scan
-    # Note: you might want to read original affine before overwriting
-
-    # Assuming original nifti_scan still accessible:
-    original_nifti <- oro.nifti::readNIfTI(scan_filepath)
-    affine <- rbind(
-      original_nifti@srow_x,
-      original_nifti@srow_y,
-      original_nifti@srow_z
-    )
-
-    # Flip the sign of first two columns (X and Y directions)
-    affine[, 1:2] <- -affine[, 1:2]
-
-    # Flip the offsets (4th column) for X and Y
-    affine[1:2, 4] <- -affine[1:2, 4]
-
-    nifti_scan@srow_x <- affine[1, ]
-    nifti_scan@srow_y <- affine[2, ]
-    nifti_scan@srow_z <- affine[3, ]
-
-    nifti_scan@qoffset_x <- affine[1, 4]
-    nifti_scan@qoffset_y <- affine[2, 4]
-    nifti_scan@qoffset_z <- affine[3, 4]
-
-    nifti_scan@qform_code <- 1
   } else if (file_type == "nrrd") {
     nrrd <- read.nrrd(scan_filepath)
 
@@ -245,7 +178,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' bone_scan_check(surface_mesh, nifti2)
+#' bone_scan_check(surface_mesh, nifti)
 #' @export
 bone_scan_check <- function(surface_mesh, nifti) {
 
@@ -804,37 +737,6 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 
 }
 
 
-#' Finds the closest template point for each vertex in a 3D surface mesh
-#' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh mesh object
-#' @param template_points matrix
-#' @return Vector. Closest point on mesh to each template point
-#' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_path)
-#' landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
-#' landmarks <- import_lmks(landmark_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 100)
-#' matched_points <- mesh_template_match(surface_mesh, mapped_coords)
-#' @importFrom FNN get.knnx
-#' @export
-mesh_template_match <- function(surface_mesh, template_points) {
-  # Get vertex coordinates from the mesh
-  vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
-
-  # Ensure template_points is a matrix (not a data frame)
-  template_points <- as.matrix(template_points)
-
-  # Use get.knnx to find nearest neighbors
-  # This finds the nearest (k = 1) template point to each vertex
-  nn <- get.knnx(data = template_points, query = vertex_coords, k = 1)
-
-  # nn$nn.index contains the indices of the nearest neighbors
-  return(as.vector(nn$nn.index))
-}
-
-
 #' maps numeric values to a color
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param x Vector.
@@ -886,7 +788,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 }
 
 
-#' Takes matrix of points (template_points) of length n with
+#' Takes matrix of points of length n with
 #' density vector of length n and maps it to a surface mesh of length m.
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
@@ -895,6 +797,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @param maxi Numeric
 #' @param mini Numeric
 #' @param export_path Character
+#' @param color_sel String
 #' @return Mesh with added color dimension
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
@@ -910,16 +813,39 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
 #' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=1000, mini=0)
 #' @importFrom Rvcg vcgPlyWrite
+#' @importFrom FNN get.knnx
 #' @export
-color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
-                       mini = 0, export_path) {
+color_mesh <- function(surface_mesh,
+                       template_pts,
+                       density_vector,
+                       maxi = 2000,
+                       mini = 0,
+                       export_path,
+                       color_sel
+                       ) {
+
+  #helper function
+  mesh_template_match <- function(surface_mesh, template_points) {
+    # Get vertex coordinates from the mesh
+    vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
+
+    # Ensure template_points is a matrix (not a data frame)
+    template_points <- as.matrix(template_points)
+
+    # Use get.knnx to find nearest neighbors
+    # This finds the nearest (k = 1) template point to each vertex
+    nn <- get.knnx(data = template_points, query = vertex_coords, k = 1)
+
+    # nn$nn.index contains the indices of the nearest neighbors
+    return(as.vector(nn$nn.index))
+  }
 
   mesh_match <- mesh_template_match(surface_mesh, template_pts)
 
   # color
   density_vector[density_vector > maxi] <- maxi
   density_vector[density_vector < mini] <- mini
-  color_map <- color_mapping(density_vector, maxi, mini)
+  color_map <- color_mapping(density_vector, maxi, mini, color_sel = color_sel)
 
   # color to mesh
   surface_mesh$material$color <- color_map[mesh_match]
@@ -939,6 +865,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' @param density_color Vector. Colors mapped from density values.
 #' @param title String. Plot title.
 #' @param userMat Optional matrix. Controls graph orientation.
+#' @param ColorBar Logical. Optional color bar.
 #' @return plot of mesh with color
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
@@ -952,22 +879,78 @@ color_mesh <- function(surface_mesh, template_pts, density_vector, maxi = 2000,
 #' nifti <- import_scan(nifti_path)
 #' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 1000)
 #' mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0,
-#' nifti, rev_y=TRUE)
+#' nifti, rev_y=FALSE)
 #' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
 #' plot <- plot_mesh(colored_mesh)
 #' @importFrom rgl shade3d view3d bgplot3d
 #' @importFrom graphics plot.new mtext
 #' @importFrom methods hasArg
+#' @importFrom grDevices colorRampPalette
 #' @export
-plot_mesh <- function(surface_mesh, density_color = NULL, title, userMat = NULL) {
+plot_mesh <- function(surface_mesh,
+                      density_color = NULL,
+                      title,
+                      userMat = NULL,
+                      ColorBar = FALSE) {
+  #helper function
+  add_rgl_colorbar <- function(colors, min_val, max_val, n = 100, pos = c(100, 0, 0), height = 50, width = 5, breaks = NULL, labels = TRUE) {
+    x0 <- pos[1]
+    y0 <- pos[2]
+    z0 <- pos[3]
+
+    # Generate n color steps and corresponding y positions
+    color_vals <- seq(min_val, max_val, length.out = n)
+    z_vals <- seq(z0, z0 + height, length.out = n + 1)
+
+    for (i in 1:n) {
+      quads3d(
+        x = c(x0, x0 + width, x0 + width, x0),
+        y = rep(y0, 4),
+        z = c(z_vals[i], z_vals[i], z_vals[i + 1], z_vals[i + 1]),
+        color = colors[i],
+        lit = FALSE
+      )
+    }
+
+    # Add tick marks and labels
+    if (!is.null(breaks)) {
+      scaled_breaks <- z0 + (breaks - min_val) / (max_val - min_val) * height
+      for (i in seq_along(breaks)) {
+        lines3d(
+          x = c(x0 + width + 1, x0 + width + 3),
+          y = c(y0, y0),
+          z = c(scaled_breaks[i], scaled_breaks[i]),
+          color = "black"
+        )
+        if (labels) {
+          text3d(x = x0 + width + 5, y = y0, z = scaled_breaks[i], texts = as.character(breaks[i]), adj = 0)
+        }
+      }
+    }
+  }
+
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(vertices), 1)
+
+  open3d()
+  par3d(windowRect = c(20, 30, 400, 400))
 
   if (!is.null(density_color)) {
     surface_mesh$material <- list(color = density_color)
     shade3d(surface_mesh, meshColor = "vertices", main = "Age", specular = 'black')
   } else {
     shade3d(surface_mesh)
+  }
+
+  if (ColorBar) {
+    color_palette <- colorRampPalette(c("darkblue", "blue", "lightblue", "green", "yellow", "red", "pink"))(100)
+    add_rgl_colorbar(
+      colors = color_palette,
+      min_val = 0,
+      max_val = 2000,
+      breaks = c(0, 500, 1000, 1500, 2000),
+      pos = c(60, 0, -150)  # Adjust position to keep it out of the mesh
+    )
   }
 
   bgplot3d({
@@ -998,22 +981,26 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title, userMat = NULL)
 #' @return Generates an `rgl` plot
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
+#'              package = "BoneDensityMapping")
 #' surface_mesh <- import_mesh(surface_mesh_path)
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json",
-#'                              package = "BoneDensityMapping")
+#'              package = "BoneDensityMapping")
 #' landmarks <- import_lmks(landmark_path)
 #' nifti_path <- system.file("extdata", "test_CT_hip.nii",
-#'                           package = "BoneDensityMapping")
+#'              package = "BoneDensityMapping")
 #' nifti <- import_scan(nifti_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
-#' mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+#' mapped_coords <- surface_points_template(surface_mesh,
+#'              landmarks, no_surface_sliders = 100)
+#' mat_peak <- voxel_point_intersect(mapped_coords, nifti,
+#'              betaCT = 1.0, sigmaCT = 1.0)
 #' colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
 #'
 #' internal_fill <- fill_bone_points(surface_mesh, 3)
 #' internal_density <- voxel_point_intersect(internal_fill, nifti)
 #' internal_colors <- color_mapping(internal_density)
-#' plot_cross_section_bone(colored_mesh, surface_colors = NULL, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5)
+#' plot_cross_section_bone(colored_mesh, surface_colors = NULL,
+#'              internal_fill, internal_colors, slice_axis = 'x',
+#'              slice_val = 0.5)
 #' @import rgl
 #' @import geometry
 #' @import concaveman
@@ -1023,18 +1010,14 @@ plot_cross_section_bone <- function(surface_mesh,
                                     surface_colors = NULL,
                                     fill_coords, fill_colors,
                                     slice_axis, slice_val,
-                                    slice_thickness = 1, IncludeSurface = TRUE,
+                                    slice_thickness = 1,
+                                    IncludeSurface = FALSE,
                                     title = "Bone Cross-Section",
                                     userMat = NULL) {
   stopifnot(nrow(fill_coords) == length(fill_colors))
   if (is.null(slice_axis) || is.null(slice_val)) {
     stop("slice_axis and slice_val must be provided")
   }
-
-  library(rgl)
-  library(geometry)
-  library(concaveman)
-  library(sp)
 
   axis_index <- switch(slice_axis, x = 1, y = 2, z = 3,
                        stop("slice_axis must be one of 'x', 'y', or 'z'"))
@@ -1051,6 +1034,7 @@ plot_cross_section_bone <- function(surface_mesh,
     slice_val * (max(fill_coords[, axis_index]) - min(fill_coords[, axis_index]))
 
   open3d()
+  par3d(windowRect = c(20, 30, 400, 400))
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
 
   # Clip surface
@@ -1127,7 +1111,7 @@ plot_cross_section_bone <- function(surface_mesh,
 
   bgplot3d({
     plot.new()
-    mtext(title, side = 3, line = 1.5, cex = 1.2)
+    mtext(side = 1, title, line = 3)
   })
 
   if (!is.null(userMat)) {
@@ -1136,14 +1120,12 @@ plot_cross_section_bone <- function(surface_mesh,
 }
 
 
-
-
 #' Produce stand alone color bar
 #' @param colors String
 #' @param mini Numeric
 #' @param maxi Numeric
-#' @param breaks Numeric vector
 #' @param orientation "horizontal" or "vertical"
+#' @param breaks Numeric vector
 #' @param title String
 #' @param text_size Numeric
 #' @param plot Logical
@@ -1157,7 +1139,6 @@ plot_cross_section_bone <- function(surface_mesh,
 color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
                       title = "", text_size = 11, plot = TRUE) {
   x <- y <- NULL
-
   # make plot
   z2 <- seq(from = mini, to = maxi, length.out = 100)
   df <- data.frame(x = 1:100, y = 1:100, z2 = z2)
@@ -1175,16 +1156,11 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
                    legend.text = element_text(size = text_size))
   }
 
-  # extract legend
   legend <- get_legend(g)
   lg <- as_ggplot(legend)
-
-  # plot if requested
   if (plot == TRUE) {
     lg
   }
-
-  # return legend
   return(lg)
 }
 

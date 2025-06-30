@@ -1,0 +1,235 @@
+---
+title: "ExampleWorkflow"
+author: "Lucas Lacambra"
+date: "2025-06-22"
+output: html_document
+---
+
+## --- Single bone analysis --- 
+# If using for the first time, install and load the following package:
+```{r}
+install.packages(BoneDensityMapping)
+library(BoneDensityMapping)
+```
+
+Next, import your data, including the bone mesh stl model, bone landmarks file, 
+and the CT scan. 
+```{r}
+surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
+                             package = "BoneDensityMapping")
+surface_mesh <- import_mesh(surface_mesh_filepath)
+
+landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                             package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
+
+scan_filepath <- system.file("extdata", "test_CT_hip.nii",
+                             package = "BoneDensityMapping")
+CTscan <- import_scan(scan_filepath)
+```
+
+It may be helpful to check that the imported landmarks are on or near the surface of the bone mesh. 
+The following example verifies that all landmarks are within 1mm of the mesh. 
+```{r}
+landmark_check(surface_mesh, landmarks, threshold = 1.0)
+```
+p
+The following function checks that the mesh coordinates are constrained within the boundaries of the CT scan:
+```{r}
+bone_scan_check(surface_mesh, CTscan)
+```
+
+Next, given the surface mesh and landmark coordinates, the following function creates a remapped bone surface with a set number of surface points. 
+```{r}
+surface_points <- surface_points_template(surface_mesh, landmarks, 10000)  
+```
+
+The bone density values of these surface points can then be determined. The output, surface density, is a data frame of densities corresponding to  each point on the bone surface. 
+```{r}
+surface_density <- surface_normal_intersect(surface_mesh, surface_points, normal_dist = 3.0, CTscan)
+```
+
+To visualize the bone, we need to map the surface points and surface density values back to the stl mesh for graphing. To accomplish this, use the color_mesh function as shown:
+```{r}
+colored_mesh <- color_mesh(surface_mesh, surface_points, surface_density)
+```
+
+Then, the colored mesh can be plotted.
+```{r}
+plot_mesh(colored_mesh, density_color = NULL, 'Bone surface', ColorBar =TRUE)
+```
+
+# Plot cross section
+To visualize internal bone, the bone can be "filled" with points. The following function returns a matrix called "internal_points" with around 7000 fill coordinates. 
+```{r}
+internal_fill <- fill_bone_points(surface_mesh, 1)
+```
+
+The function voxel_point_intersect can be used to find approximate bone density values on any point in the bone (internal or surface). The function will be used to calculate the densities of the internal fill in this case. 
+```{r}
+internal_density <- voxel_point_intersect(internal_fill, CTscan)
+```
+
+We can also map the internal bone density values to colors as shown.
+```{r}
+internal_colors <- color_mapping(internal_density)
+```
+
+A cross section of the bone can also be plotted to visualize internal density.
+```{r}
+plot_cross_section_bone(colored_mesh, surface_colors = NULL, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5)
+```
+
+
+## --- Group bone analysis --- ## 
+Import data, including bone mesh, landmarks file, and CT scan for each patient in your dataset. 
+```{r}
+patients <- list()
+
+for (i in 1:6) {
+  id <- paste0("SCAP00", i)
+
+  mesh_path <- system.file("extdata", paste0(id, ".stl"), package = "BoneDensityMapping")
+  landmark_path <- system.file("extdata", paste0(id, "_landmarks.fcsv"), package = "BoneDensityMapping")
+  ct_path <- system.file("extdata", paste0(id, "_resampled.nrrd"), package = "BoneDensityMapping")
+
+  patients[[id]] <- list(
+    mesh = import_mesh(mesh_path),
+    landmarks = import_lmks(landmark_path),
+    ct = import_scan(ct_path)
+  )
+}
+```
+
+
+One bone must be designated the "template" bone; all other bones in the dataset will be mapped to this bone model for comparison. The following function places 100 new points (in addition to landmark points) across the surface of the template bone. 
+```{r}
+patients$SCAP001$surface_points <- surface_points_template(patients$SCAP001$mesh, patients$SCAP001$landmarks, 1000)  
+```
+
+Then, this function can be applied to all other bones in the set to map all template points to the new bone, creating a consistent set of surface points. The remapping function will fail on chiral objects, so you have the option to temporarily mirror the new bone for the warping process. The function returns a set of points in their original unmirrored form which each correspond to a point on the template surface. Enable plot_check to check laterality before and after the mirroring process. 
+
+#loop thru 
+```{r}
+patient_sides <- data.frame(
+  ID = sprintf("SCAP%03d", 1:6),
+  Side = c("LEFT", "RIGHT", "LEFT", "LEFT", "RIGHT", "RIGHT"),
+  stringsAsFactors = FALSE
+)
+
+for (i in 2:6) {
+  id <- sprintf("SCAP%03d", i)
+
+  mirror_side <- if (patient_sides$Side[i] == "RIGHT") "x" else FALSE
+
+  patients[[id]]$surface_points <- surface_points_new(
+    patients[[id]]$mesh,
+    patients[[id]]$landmarks,
+    patients$SCAP001$surface_points,
+    mirror = mirror_side,
+    plot_check = FALSE
+  ) 
+}
+```
+
+Then, density values of each bone can be calculated.  
+```{r}
+for (i in 1:6) {
+  id <- sprintf("SCAP%03d", i)
+
+  patients[[id]]$surface_density <- surface_normal_intersect(
+    patients[[id]]$mesh,
+    patients[[id]]$surface_points,
+    normal_dist = 1.0,
+    patients[[id]]$ct
+  )
+}
+```
+
+The we can color the template mesh according to the density of each of the bones in the group.
+```{r}
+for (i in 1:6) {
+  id <- sprintf("SCAP%03d", i)
+  
+  patients[[id]]$colored_mesh <- color_mesh(
+    patients$SCAP001$mesh,
+    patients$SCAP001$surface_points,
+    patients[[id]]$surface_density,
+  )
+}
+
+plot_mesh(patients$SCAP001$colored_mesh, title = 'SCAP001')
+plot_mesh(patients$SCAP002$colored_mesh, title = 'SCAP002')
+plot_mesh(patients$SCAP003$colored_mesh, title = 'SCAP003')
+plot_mesh(patients$SCAP004$colored_mesh, title = 'SCAP004')
+plot_mesh(patients$SCAP005$colored_mesh, title = 'SCAP005')
+plot_mesh(patients$SCAP006$colored_mesh, title = 'SCAP006')
+
+```
+
+The average bone density can be calculated like so:
+```{r}
+# Collect all surface density vectors into a matrix
+density_matrix <- do.call(cbind, lapply(1:6, function(i) {
+  id <- sprintf("SCAP%03d", i)
+  patients[[id]]$surface_density
+}))
+
+# Average across columns (i.e. across patients), row by row
+average_density <- rowMeans(density_matrix)
+
+average_colored_mesh <- color_mesh(
+    patients$SCAP001$mesh,
+    patients$SCAP001$surface_points,
+    average_density,
+  )
+
+plot_mesh(average_colored_mesh, title = 'avg')
+```
+
+Bones can also be separated into different groups. Young: 1,4,6 vs Old: 2,3,5
+```{r}
+# Define patient IDs
+young_ids <- c(1, 4, 6)
+old_ids <- c(2, 3, 5)
+
+# Helper function to get surface densities
+get_densities <- function(indices) {
+  do.call(cbind, lapply(indices, function(i) {
+    id <- sprintf("SCAP%03d", i)
+    patients[[id]]$surface_density
+  }))
+}
+
+average_young_density <- rowMeans(get_densities(young_ids))
+average_old_density <- rowMeans(get_densities(old_ids))
+
+# Create colored meshes for each group
+young_colored_mesh <- color_mesh(patients$SCAP001$mesh, patients$SCAP001$surface_points, average_young_density)
+old_colored_mesh <- color_mesh(patients$SCAP001$mesh, patients$SCAP001$surface_points, average_old_density)
+
+close3d()
+plot_mesh(young_colored_mesh, title = "Young Group")
+plot_mesh(old_colored_mesh, title = "Old Group")
+
+
+density_diff <- average_young_density - average_old_density
+max_abs <- max(abs(density_diff))
+
+# Color scheme: red = young > old, blue = old > young
+my_colors <- c("blue", "white", "red")
+
+# Create colored mesh of differences
+diff_colored_mesh <- color_mesh(
+  patients$SCAP001$mesh,
+  patients$SCAP001$surface_points,
+  density_diff,
+  maxi = max_abs,
+  mini = -max_abs,
+  color_sel = my_colors
+)
+
+# Plot it
+plot_mesh(diff_colored_mesh, title = "Young - Old Density Difference")
+```
+

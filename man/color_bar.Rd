@@ -37,5 +37,5 @@ Produce stand alone color bar
 }
 \examples{
 colors <- c("darkblue", "blue", "lightblue", "green", "yellow", "red", "pink")
-color_bar(colors, 0, 1, breaks = c(0, 0.25, 0.5, 0.75, 1))
+color_bar(colors, 0, 2000, breaks = c(0, 500, 1000, 1500, 2000))
 }
