@@ -7,7 +7,7 @@ test_that("landmark_check passes when all landmarks are within threshold", {
 
   expect_message(
     landmark_check(mesh, landmarks, threshold = 2.0),
-    "landmarks are on bone surface")
+    "Landmarks are on bone surface")
 })
 
 
@@ -20,7 +20,7 @@ test_that("landmark_check warns when landmarks exceed threshold", {
 
   expect_message(
     landmark_check(mesh, landmarks, threshold = 0.5),
-    "landmarks not on bone surface"
+    "Landmarks not on bone surface"
   )
 })
 

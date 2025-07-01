@@ -1,9 +1,7 @@
 ## To-do
-# embed color bar - done
-# nrrd conversion - done
-# loop example scap - done
-# color_mesh confusing roxygen
-#mapped coords?
+# update color bar
+# use vertices for single bone example
+
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -560,9 +558,16 @@ surface_points_new <- function(surface_mesh, landmarks, template, mirror = FALSE
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
-surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0,
-                                     nifti, betaCT = 1.0, sigmaCT = 1.0,
-                                     rev_x = FALSE, rev_y = FALSE, rev_z = FALSE) {
+surface_normal_intersect <- function(surface_mesh,
+                                     mapped_coords,
+                                     normal_dist = 3.0,
+                                     nifti,
+                                     betaCT = 1.0,
+                                     sigmaCT = 1.0,
+                                     rev_x = FALSE,
+                                     rev_y = FALSE,
+                                     rev_z = FALSE) {
+
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
 
@@ -767,8 +772,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 
   # Generate color map
   if (missing(color_sel)) {
-    colormap <- colorRamp(c("dark blue", "blue", "light blue",
-                            "green", "yellow", "red", "pink"),
+    colormap <- colorRamp(c("grey", "blue", "green", "yellow", "orange", "red", "pink"),
                           interpolate = "spline")
   } else {
     colormap <- colorRamp(color_sel)
@@ -818,28 +822,24 @@ color_mesh <- function(surface_mesh,
                        color_sel
                        ) {
 
-  #helper function
   mesh_template_match <- function(surface_mesh, template_points) {
     # Get vertex coordinates from the mesh
     vertex_coords <- t(surface_mesh$vb)[, c(1:3)]
-
-    # Ensure template_points is a matrix (not a data frame)
     template_points <- as.matrix(template_points)
 
-    # Use get.knnx to find nearest neighbors
-    # This finds the nearest (k = 1) template point to each vertex
+    # nearest neighbor match
     nn <- get.knnx(data = template_points, query = vertex_coords, k = 1)
-
-    # nn$nn.index contains the indices of the nearest neighbors
     return(as.vector(nn$nn.index))
   }
 
   mesh_match <- mesh_template_match(surface_mesh, template_pts)
 
-  # color
-  density_vector[density_vector > maxi] <- maxi
-  density_vector[density_vector < mini] <- mini
-  color_map <- color_mapping(density_vector, maxi, mini, color_sel = color_sel)
+  # Pass maxi and mini only if both are not NULL, else call without them
+  if (!is.null(maxi) && !is.null(mini)) {
+    color_map <- color_mapping(density_vector, maxi, mini, color_sel = color_sel)
+  } else {
+    color_map <- color_mapping(density_vector, color_sel = color_sel)
+  }
 
   # color to mesh
   surface_mesh$material$color <- color_map[mesh_match]
@@ -859,7 +859,10 @@ color_mesh <- function(surface_mesh,
 #' @param density_color Vector. Colors mapped from density values.
 #' @param title String. Plot title.
 #' @param userMat Optional matrix. Controls graph orientation.
-#' @param ColorBar Logical. Optional color bar.
+#' @param legend Logical. Optional color bar.
+#' @param legend_color_sel Optional character with color gradient
+#' @param legend_maxi Numeric. Maximum bone density.
+#' @param legend_mini Numeric. Minimum bone density.
 #' @return plot of mesh with color
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
@@ -884,50 +887,17 @@ color_mesh <- function(surface_mesh,
 plot_mesh <- function(surface_mesh,
                       density_color = NULL,
                       title,
-                      userMat = NULL,
-                      ColorBar = FALSE) {
-  #helper function
-  add_rgl_colorbar <- function(colors, min_val, max_val, n = 100, pos = c(100, 0, 0), height = 50, width = 5, breaks = NULL, labels = TRUE) {
-    x0 <- pos[1]
-    y0 <- pos[2]
-    z0 <- pos[3]
-
-    # Generate n color steps and corresponding y positions
-    color_vals <- seq(min_val, max_val, length.out = n)
-    z_vals <- seq(z0, z0 + height, length.out = n + 1)
-
-    for (i in 1:n) {
-      quads3d(
-        x = c(x0, x0 + width, x0 + width, x0),
-        y = rep(y0, 4),
-        z = c(z_vals[i], z_vals[i], z_vals[i + 1], z_vals[i + 1]),
-        color = colors[i],
-        lit = FALSE
-      )
-    }
-
-    # Add tick marks and labels
-    if (!is.null(breaks)) {
-      scaled_breaks <- z0 + (breaks - min_val) / (max_val - min_val) * height
-      for (i in seq_along(breaks)) {
-        lines3d(
-          x = c(x0 + width + 1, x0 + width + 3),
-          y = c(y0, y0),
-          z = c(scaled_breaks[i], scaled_breaks[i]),
-          color = "black"
-        )
-        if (labels) {
-          text3d(x = x0 + width + 5, y = y0, z = scaled_breaks[i], texts = as.character(breaks[i]), adj = 0)
-        }
-      }
-    }
-  }
+                      legend = TRUE,
+                      legend_color_sel = NULL,
+                      legend_maxi = 2000,
+                      legend_mini = 0,
+                      userMat = NULL) {
 
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
   surface_mesh$vb <- rbind(t(vertices), 1)
 
   open3d()
-  par3d(windowRect = c(20, 30, 400, 400))
+  par3d(windowRect = c(20, 30, 500, 400))
 
   if (!is.null(density_color)) {
     surface_mesh$material <- list(color = density_color)
@@ -936,21 +906,36 @@ plot_mesh <- function(surface_mesh,
     shade3d(surface_mesh)
   }
 
-  if (ColorBar) {
-    color_palette <- colorRampPalette(c("darkblue", "blue", "lightblue", "green", "yellow", "red", "pink"))(100)
-    add_rgl_colorbar(
-      colors = color_palette,
-      min_val = 0,
-      max_val = 2000,
-      breaks = c(0, 500, 1000, 1500, 2000),
-      pos = c(60, 0, -150)  # Adjust position to keep it out of the mesh
-    )
+  if (legend) {
+    if (is.null(legend_color_sel)) {
+      legend_color_sel <- c("grey", "blue", "green", "yellow", "orange", "red", "pink")
+    }
+
+    if (is.null(legend_maxi) && is.null(legend_mini)) {
+      legend_maxi <- 2100
+      legend_mini <- 0
+    }
+
+    breaks <- seq(legend_maxi, legend_mini, length.out = length(legend_color_sel))
+    legend_labels <- round(breaks, -1)
+
+    legend_colors <- rev(legend_color_sel)
+
+    bgplot3d({
+      par(mar = c(5, 4, 4, 2))  # bottom, left, top, right margins
+
+      plot.new()
+
+      legend("topright", title = expression("Density (mg/cm"^3*")"),
+             legend = legend_labels,
+             fill = legend_colors,
+             cex = 1.2,
+             bty = "n")
+
+      mtext(title, side = 1, line = 3, cex = 1.4)
+    })
   }
 
-  bgplot3d({
-    plot.new()
-    mtext(side = 1, title, line = 3)
-  })
   if (hasArg(userMat)) {
     view3d(userMatrix = userMat)
   }
@@ -969,6 +954,10 @@ plot_mesh <- function(surface_mesh,
 #' @param slice_axis Character. `'x'`, `'y'`, or `'z'`. Axis along which to slice.
 #' @param slice_val Numeric (0 to 1). Relative slice location along selected axis.
 #' @param slice_thickness Numeric. Width of the slice (default = 1).
+#' @param legend Logical. Optional color bar.
+#' @param legend_color_sel Optional character with color gradient
+#' @param legend_maxi Numeric. Maximum bone density.
+#' @param legend_mini Numeric. Minimum bone density.
 #' @param IncludeSurface Logical. Whether to include the clipped surface mesh.
 #' @param title Character. Title for the plot.
 #' @param userMat Optional. A 4x4 matrix controlling view orientation.
@@ -999,6 +988,7 @@ plot_mesh <- function(surface_mesh,
 #' @import geometry
 #' @import concaveman
 #' @import sp
+#' @importFrom graphics par
 #' @export
 plot_cross_section_bone <- function(surface_mesh,
                                     surface_colors = NULL,
@@ -1007,7 +997,11 @@ plot_cross_section_bone <- function(surface_mesh,
                                     slice_thickness = 1,
                                     IncludeSurface = FALSE,
                                     title = "Bone Cross-Section",
-                                    userMat = NULL) {
+                                    userMat = NULL,
+                                    legend = TRUE,
+                                    legend_color_sel = NULL,
+                                    legend_maxi = NULL,
+                                    legend_mini = NULL) {
   stopifnot(nrow(fill_coords) == length(fill_colors))
   if (is.null(slice_axis) || is.null(slice_val)) {
     stop("slice_axis and slice_val must be provided")
@@ -1028,7 +1022,7 @@ plot_cross_section_bone <- function(surface_mesh,
     slice_val * (max(fill_coords[, axis_index]) - min(fill_coords[, axis_index]))
 
   open3d()
-  par3d(windowRect = c(20, 30, 400, 400))
+  par3d(windowRect = c(20, 30, 500, 400))
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
 
   # Clip surface
@@ -1104,8 +1098,30 @@ plot_cross_section_bone <- function(surface_mesh,
   }
 
   bgplot3d({
+    par(mar = c(5, 4, 4, 2))
     plot.new()
-    mtext(side = 1, title, line = 3)
+    if (legend) {
+      if (is.null(legend_color_sel)) {
+        legend_color_sel <- c("grey", "blue", "green", "yellow", "orange", "red", "pink")
+      }
+
+      if (is.null(legend_maxi) || is.null(legend_mini)) {
+        legend_maxi <- 2100
+        legend_mini <- 0
+      }
+      breaks <- seq(legend_maxi, legend_mini, length.out = length(legend_color_sel))
+      legend_labels <- round(breaks, -1)
+
+      legend_colors <- rev(legend_color_sel)
+
+      legend("topright", title = expression("Density (mg/cm"^3*")"),
+             legend = legend_labels,
+             fill = legend_colors,
+             cex = 1.2,
+             bty = "n")
+    }
+
+    mtext(side = 1, title, line = 3, cex = 1.4)
   })
 
   if (!is.null(userMat)) {

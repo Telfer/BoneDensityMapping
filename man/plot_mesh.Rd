@@ -8,8 +8,11 @@ plot_mesh(
   surface_mesh,
   density_color = NULL,
   title,
-  userMat = NULL,
-  ColorBar = FALSE
+  legend = TRUE,
+  legend_color_sel = NULL,
+  legend_maxi = 2000,
+  legend_mini = 0,
+  userMat = NULL
 )
 }
 \arguments{
@@ -19,9 +22,15 @@ plot_mesh(
 
 \item{title}{String. Plot title.}
 
-\item{userMat}{Optional matrix. Controls graph orientation.}
+\item{legend}{Logical. Optional color bar.}
 
-\item{ColorBar}{Logical. Optional color bar.}
+\item{legend_color_sel}{Optional character with color gradient}
+
+\item{legend_maxi}{Numeric. Maximum bone density.}
+
+\item{legend_mini}{Numeric. Minimum bone density.}
+
+\item{userMat}{Optional matrix. Controls graph orientation.}
 }
 \value{
 plot of mesh with color
