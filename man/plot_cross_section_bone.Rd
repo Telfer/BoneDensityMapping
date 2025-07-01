@@ -14,7 +14,11 @@ plot_cross_section_bone(
   slice_thickness = 1,
   IncludeSurface = FALSE,
   title = "Bone Cross-Section",
-  userMat = NULL
+  userMat = NULL,
+  legend = TRUE,
+  legend_color_sel = NULL,
+  legend_maxi = NULL,
+  legend_mini = NULL
 )
 }
 \arguments{
@@ -37,6 +41,14 @@ plot_cross_section_bone(
 \item{title}{Character. Title for the plot.}
 
 \item{userMat}{Optional. A 4x4 matrix controlling view orientation.}
+
+\item{legend}{Logical. Optional color bar.}
+
+\item{legend_color_sel}{Optional character with color gradient}
+
+\item{legend_maxi}{Numeric. Maximum bone density.}
+
+\item{legend_mini}{Numeric. Minimum bone density.}
 }
 \value{
 Generates an `rgl` plot

@@ -2,7 +2,9 @@
 title: "ExampleWorkflow"
 author: "Lucas Lacambra"
 date: "2025-06-22"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ## --- Single bone analysis --- 
@@ -39,24 +41,20 @@ The following function checks that the mesh coordinates are constrained within t
 bone_scan_check(surface_mesh, CTscan)
 ```
 
-Next, given the surface mesh and landmark coordinates, the following function creates a remapped bone surface with a set number of surface points. 
+The bone density values of the mesh vertices can be determined. The output, surface density, is a data frame of densities corresponding to each point on the bone surface. 
 ```{r}
-surface_points <- surface_points_template(surface_mesh, landmarks, 10000)  
+vertices <- t(surface_mesh$vb)[, c(1:3)]
+surface_density <- surface_normal_intersect(surface_mesh, vertices, normal_dist = 3.0, CTscan)
 ```
 
-The bone density values of these surface points can then be determined. The output, surface density, is a data frame of densities corresponding to  each point on the bone surface. 
+The color_map function will assign colors to the density values. 
 ```{r}
-surface_density <- surface_normal_intersect(surface_mesh, surface_points, normal_dist = 3.0, CTscan)
-```
-
-To visualize the bone, we need to map the surface points and surface density values back to the stl mesh for graphing. To accomplish this, use the color_mesh function as shown:
-```{r}
-colored_mesh <- color_mesh(surface_mesh, surface_points, surface_density)
+surface_colors <- color_mapping(surface_density, maxi = 1800, mini = 0)
 ```
 
 Then, the colored mesh can be plotted.
 ```{r}
-plot_mesh(colored_mesh, density_color = NULL, 'Bone surface', ColorBar =TRUE)
+plot_mesh(surface_mesh, surface_colors, title = 'Bone surface', legend_maxi = 1800, legend_mini = 0)
 ```
 
 # Plot cross section
@@ -72,12 +70,12 @@ internal_density <- voxel_point_intersect(internal_fill, CTscan)
 
 We can also map the internal bone density values to colors as shown.
 ```{r}
-internal_colors <- color_mapping(internal_density)
+internal_colors <- color_mapping(internal_density, maxi = 1800, mini = 0)
 ```
 
 A cross section of the bone can also be plotted to visualize internal density.
 ```{r}
-plot_cross_section_bone(colored_mesh, surface_colors = NULL, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5)
+plot_cross_section_bone(surface_mesh, surface_colors, IncludeSurface = FALSE, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5, legend_maxi = 1800, legend_mini = 0)
 ```
 
 
@@ -104,7 +102,7 @@ for (i in 1:6) {
 
 One bone must be designated the "template" bone; all other bones in the dataset will be mapped to this bone model for comparison. The following function places 100 new points (in addition to landmark points) across the surface of the template bone. 
 ```{r}
-patients$SCAP001$surface_points <- surface_points_template(patients$SCAP001$mesh, patients$SCAP001$landmarks, 1000)  
+patients$SCAP001$surface_points <- surface_points_template(patients$SCAP001$mesh, patients$SCAP001$landmarks, 10000)  
 ```
 
 Then, this function can be applied to all other bones in the set to map all template points to the new bone, creating a consistent set of surface points. The remapping function will fail on chiral objects, so you have the option to temporarily mirror the new bone for the warping process. The function returns a set of points in their original unmirrored form which each correspond to a point on the template surface. Enable plot_check to check laterality before and after the mirroring process. 
@@ -155,6 +153,8 @@ for (i in 1:6) {
     patients$SCAP001$mesh,
     patients$SCAP001$surface_points,
     patients[[id]]$surface_density,
+    maxi = 2100, 
+    mini = 0
   )
 }
 
@@ -230,6 +230,6 @@ diff_colored_mesh <- color_mesh(
 )
 
 # Plot it
-plot_mesh(diff_colored_mesh, title = "Young - Old Density Difference")
+plot_mesh(diff_colored_mesh, title = "Young - Old Density Difference", legend_maxi = max_abs, legend_mini = -max_abs, legend_color_sel = my_colors)
 ```
 

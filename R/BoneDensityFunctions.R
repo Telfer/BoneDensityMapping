@@ -558,9 +558,16 @@ surface_points_new <- function(surface_mesh, landmarks, template, mirror = FALSE
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
-surface_normal_intersect <- function(surface_mesh, mapped_coords, normal_dist = 3.0,
-                                     nifti, betaCT = 1.0, sigmaCT = 1.0,
-                                     rev_x = FALSE, rev_y = FALSE, rev_z = FALSE) {
+surface_normal_intersect <- function(surface_mesh,
+                                     mapped_coords,
+                                     normal_dist = 3.0,
+                                     nifti,
+                                     betaCT = 1.0,
+                                     sigmaCT = 1.0,
+                                     rev_x = FALSE,
+                                     rev_y = FALSE,
+                                     rev_z = FALSE) {
+
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
 
@@ -809,8 +816,8 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 color_mesh <- function(surface_mesh,
                        template_pts,
                        density_vector,
-                       maxi = NULL,
-                       mini = NULL,
+                       maxi = 2000,
+                       mini = 0,
                        export_path,
                        color_sel
                        ) {
@@ -853,6 +860,9 @@ color_mesh <- function(surface_mesh,
 #' @param title String. Plot title.
 #' @param userMat Optional matrix. Controls graph orientation.
 #' @param legend Logical. Optional color bar.
+#' @param legend_color_sel Optional character with color gradient
+#' @param legend_maxi Numeric. Maximum bone density.
+#' @param legend_mini Numeric. Minimum bone density.
 #' @return plot of mesh with color
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
@@ -878,9 +888,9 @@ plot_mesh <- function(surface_mesh,
                       density_color = NULL,
                       title,
                       legend = TRUE,
-                      legend_colors = NULL,
-                      legend_maxi = NULL,
-                      legend_mini = NULL,
+                      legend_color_sel = NULL,
+                      legend_maxi = 2000,
+                      legend_mini = 0,
                       userMat = NULL) {
 
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
@@ -897,8 +907,8 @@ plot_mesh <- function(surface_mesh,
   }
 
   if (legend) {
-    if (is.null(legend_colors)) {
-      legend_colors <- c("pink", "red", "orange", "yellow", "green", "blue", "grey")
+    if (is.null(legend_color_sel)) {
+      legend_color_sel <- c("grey", "blue", "green", "yellow", "orange", "red", "pink")
     }
 
     if (is.null(legend_maxi) && is.null(legend_mini)) {
@@ -906,15 +916,17 @@ plot_mesh <- function(surface_mesh,
       legend_mini <- 0
     }
 
-    breaks <- seq(legend_maxi, legend_mini, length.out = length(legend_colors))
-    legend_labels <- round(breaks, 1)
+    breaks <- seq(legend_maxi, legend_mini, length.out = length(legend_color_sel))
+    legend_labels <- round(breaks, -1)
+
+    legend_colors <- rev(legend_color_sel)
 
     bgplot3d({
       par(mar = c(5, 4, 4, 2))  # bottom, left, top, right margins
 
       plot.new()
 
-      legend("topright", title = "Density",
+      legend("topright", title = expression("Density (mg/cm"^3*")"),
              legend = legend_labels,
              fill = legend_colors,
              cex = 1.2,
@@ -942,6 +954,10 @@ plot_mesh <- function(surface_mesh,
 #' @param slice_axis Character. `'x'`, `'y'`, or `'z'`. Axis along which to slice.
 #' @param slice_val Numeric (0 to 1). Relative slice location along selected axis.
 #' @param slice_thickness Numeric. Width of the slice (default = 1).
+#' @param legend Logical. Optional color bar.
+#' @param legend_color_sel Optional character with color gradient
+#' @param legend_maxi Numeric. Maximum bone density.
+#' @param legend_mini Numeric. Minimum bone density.
 #' @param IncludeSurface Logical. Whether to include the clipped surface mesh.
 #' @param title Character. Title for the plot.
 #' @param userMat Optional. A 4x4 matrix controlling view orientation.
@@ -972,6 +988,7 @@ plot_mesh <- function(surface_mesh,
 #' @import geometry
 #' @import concaveman
 #' @import sp
+#' @importFrom graphics par
 #' @export
 plot_cross_section_bone <- function(surface_mesh,
                                     surface_colors = NULL,
@@ -980,7 +997,11 @@ plot_cross_section_bone <- function(surface_mesh,
                                     slice_thickness = 1,
                                     IncludeSurface = FALSE,
                                     title = "Bone Cross-Section",
-                                    userMat = NULL) {
+                                    userMat = NULL,
+                                    legend = TRUE,
+                                    legend_color_sel = NULL,
+                                    legend_maxi = NULL,
+                                    legend_mini = NULL) {
   stopifnot(nrow(fill_coords) == length(fill_colors))
   if (is.null(slice_axis) || is.null(slice_val)) {
     stop("slice_axis and slice_val must be provided")
@@ -1001,7 +1022,7 @@ plot_cross_section_bone <- function(surface_mesh,
     slice_val * (max(fill_coords[, axis_index]) - min(fill_coords[, axis_index]))
 
   open3d()
-  par3d(windowRect = c(20, 30, 400, 400))
+  par3d(windowRect = c(20, 30, 500, 400))
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
 
   # Clip surface
@@ -1077,8 +1098,30 @@ plot_cross_section_bone <- function(surface_mesh,
   }
 
   bgplot3d({
+    par(mar = c(5, 4, 4, 2))
     plot.new()
-    mtext(side = 1, title, line = 3)
+    if (legend) {
+      if (is.null(legend_color_sel)) {
+        legend_color_sel <- c("grey", "blue", "green", "yellow", "orange", "red", "pink")
+      }
+
+      if (is.null(legend_maxi) || is.null(legend_mini)) {
+        legend_maxi <- 2100
+        legend_mini <- 0
+      }
+      breaks <- seq(legend_maxi, legend_mini, length.out = length(legend_color_sel))
+      legend_labels <- round(breaks, -1)
+
+      legend_colors <- rev(legend_color_sel)
+
+      legend("topright", title = expression("Density (mg/cm"^3*")"),
+             legend = legend_labels,
+             fill = legend_colors,
+             cex = 1.2,
+             bty = "n")
+    }
+
+    mtext(side = 1, title, line = 3, cex = 1.4)
   })
 
   if (!is.null(userMat)) {
