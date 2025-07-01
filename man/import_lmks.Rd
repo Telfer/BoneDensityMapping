@@ -7,7 +7,7 @@
 import_lmks(landmark_path)
 }
 \arguments{
-\item{landmark_path}{String. File path to landmark data, .json or .fcsv format}
+\item{landmark_path}{String. File path to landmark data. .json or .fcsv format}
 }
 \value{
 dataframe. Columns are landmark name, x, y, and z coordinates

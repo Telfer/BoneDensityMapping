@@ -48,14 +48,14 @@ test_that("surface_points_new looks reasonable", {
   scap_002_lmk <- import_lmks(landmark_path)
   scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk, template_coords)
 
-  open3d()
-  shade3d(scap_001_mesh, color = "gray", alpha = 0.2)
-  points3d(scap_001_lmk[, c("x", "y", "z")], col = "blue", size = 2)
-  points3d(template_coords, col = "green", size = 0.5)
+  open3d() +
+    shade3d(scap_001_mesh, color = "gray", alpha = 0.2) +
+    points3d(scap_001_lmk[, c("x", "y", "z")], col = "blue", size = 2) +
+    points3d(template_coords, col = "green", size = 0.5) +
 
-  shade3d(scap_002_mesh, color = "gray", alpha = 0.2)
-  points3d(scap_002_lmk[, c("x", "y", "z")], col = "red", size = 2)
-  points3d(scap_002_remapped, col = "purple", size = 0.5)
+    shade3d(scap_002_mesh, color = "gray", alpha = 0.2) +
+    points3d(scap_002_lmk[, c("x", "y", "z")], col = "red", size = 2) +
+    points3d(scap_002_remapped, col = "purple", size = 0.5)
 
   expect(TRUE)
 })

@@ -2,7 +2,8 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_points_template}
 \alias{surface_points_template}
-\title{Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.}
+\title{redefine surface points. Adds additional surface points (“sliders”)
+that are spatially distributed across the mesh surface.}
 \usage{
 surface_points_template(surface_mesh, landmarks, no_surface_sliders)
 }
@@ -17,7 +18,8 @@ surface_points_template(surface_mesh, landmarks, no_surface_sliders)
 Data frame. 3D coordinates for the combined set of original landmarks and the new surface points
 }
 \description{
-Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
+redefine surface points. Adds additional surface points (“sliders”)
+that are spatially distributed across the mesh surface.
 }
 \examples{
 surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",

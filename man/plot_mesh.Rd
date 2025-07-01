@@ -4,16 +4,24 @@
 \alias{plot_mesh}
 \title{plot mesh}
 \usage{
-plot_mesh(surface_mesh, title, density_color = NULL, userMat = NULL)
+plot_mesh(
+  surface_mesh,
+  density_color = NULL,
+  title,
+  userMat = NULL,
+  ColorBar = FALSE
+)
 }
 \arguments{
 \item{surface_mesh}{Mesh object}
 
-\item{title}{String. Plot title.}
-
 \item{density_color}{Vector. Colors mapped from density values.}
 
+\item{title}{String. Plot title.}
+
 \item{userMat}{Optional matrix. Controls graph orientation.}
+
+\item{ColorBar}{Logical. Optional color bar.}
 }
 \value{
 plot of mesh with color
@@ -31,10 +39,11 @@ landmarks <- import_lmks(landmark_path)
 nifti_path <- system.file("extdata", "test_CT_hip.nii",
                           package = "BoneDensityMapping")
 nifti <- import_scan(nifti_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 100)
-mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
+mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 1000)
+mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0,
+nifti, rev_y=FALSE)
 colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
-plot <- plot_mesh(colored_mesh, "Femur Bone Density")
+plot <- plot_mesh(colored_mesh)
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
