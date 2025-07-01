@@ -272,8 +272,7 @@ fill_bone_points <- function(surface_mesh, spacing) {
   return(in_coords)
 }
 
-#' redefine surface points. Adds additional surface points (“sliders”)
-#' that are spatially distributed across the mesh surface.
+#' Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
 #' @author Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
 #' @param surface_mesh Mesh object
 #' @param landmarks Data frame with landmark coordinates (columns: ID, x, y, z)
@@ -1159,6 +1158,7 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
   return(lg)
 }
 
+
 #' local significance
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertices Matrix
@@ -1194,6 +1194,7 @@ rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
   return(sig_vals_updated)
 }
 
+
 #' Sigma beta CT calculations
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param table_height Numeric
@@ -1216,6 +1217,7 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
   if(return_coeff == "sigma") {return(sigmaCT)}
   if(return_coeff == "beta") {return(betaCT)}
 }
+
 
 #' reorientate_landmarks
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
