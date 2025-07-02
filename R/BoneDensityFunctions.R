@@ -1,6 +1,8 @@
 ## To-do
 # update color bar
 # use vertices for single bone example
+# make nii files nii.gz for space
+# make data external
 
 
 #' import landmark coordinates
@@ -57,7 +59,7 @@ import_lmks <- function(landmark_path) {
 import_scan <- function(scan_filepath) {
   file_type <- tools::file_ext(scan_filepath)
 
-  if (file_type == "nii") {
+  if (file_type == "nii" | file_type == "gz") {
     nifti_scan <- oro.nifti::readNIfTI(scan_filepath, reorient = FALSE)
 
   } else if (file_type == "nrrd") {
