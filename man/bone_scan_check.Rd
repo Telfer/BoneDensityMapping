@@ -21,13 +21,17 @@ If mesh is inside the scan volume, the function prints a summary
 Check if mesh or vertex coordinates are fully contained within scan volume
 }
 \examples{
-scan_filepath <- system.file("extdata", "test_CT_hip.nii",
-                          package = "BoneDensityMapping")
-nifti <- import_scan(scan_filepath)
-surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
+\dontrun{
+  # Download CT scan
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  scan_filepath <- tempfile(fileext = ".nii.gz")
+  download.file(url, scan_filepath, mode = "wb")
+  nifti <- import_scan(scan_filepath)
+  surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
                                  package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_filepath)
-bone_scan_check(surface_mesh, nifti)
+  surface_mesh <- import_mesh(surface_mesh_filepath)
+  bone_scan_check(surface_mesh, nifti)
+}
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

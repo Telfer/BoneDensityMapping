@@ -16,9 +16,13 @@ scan object
 import CT scan
 }
 \examples{
-scan_filepath <- system.file("extdata", "test_CT_hip.nii",
-                         package = "BoneDensityMapping")
-import_scan(scan_filepath)
+\dontrun{
+  # Download CT scan
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  scan_filepath <- tempfile(fileext = ".nii.gz")
+  download.file(url, scan_filepath, mode = "wb")
+  import_scan(scan_filepath)
+}
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

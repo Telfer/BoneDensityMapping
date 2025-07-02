@@ -39,20 +39,26 @@ plot of mesh with color
 plot mesh
 }
 \examples{
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-                                 package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path)
-landmark_path <- system.file("extdata", "test_femur.mrk.json",
-                             package = "BoneDensityMapping")
-landmarks <- import_lmks(landmark_path)
-nifti_path <- system.file("extdata", "test_CT_hip.nii",
-                          package = "BoneDensityMapping")
-nifti <- import_scan(nifti_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, no_surface_sliders = 1000)
-mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords, normal_dist = 3.0,
-nifti, rev_y=FALSE)
-colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
-plot <- plot_mesh(colored_mesh)
+\dontrun{
+  # Download CT scan
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  scan_filepath <- tempfile(fileext = ".nii.gz")
+  download.file(url, scan_filepath, mode = "wb")
+  nifti <- import_scan(scan_filepath)
+  surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
+                                   package = "BoneDensityMapping")
+  surface_mesh <- import_mesh(surface_mesh_path)
+  vertices <- t(surface_mesh$vb)[, c(1:3)]
+  landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                               package = "BoneDensityMapping")
+  landmarks <- import_lmks(landmark_path)
+  mapped_coords <- surface_points_template(surface_mesh, landmarks,
+                                           no_surface_sliders = 100)
+  mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
+                                       normal_dist = 3.0, nifti, rev_y=FALSE)
+  color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+  plot <- plot_mesh(color_mesh)
+}
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
