@@ -1,15 +1,16 @@
 ## To-do
 # use vertices for single bone example
-# make data external (update examples)
 # error message (or fix) for bone model on border of scan?
 # make sure surface normal intersect and voxel point intersect have same behavior (rev_y)
 # ct-coefficients
 # does plot cross section need all the bits in example?
+# make stls smaller
 
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param landmark_path String. File path to landmark data. .json or .fcsv format
+#' @param landmark_path String. File path to landmark data. .json or .fcsv
+#' format
 #' @return dataframe. Columns are landmark name, x, y, and z coordinates
 #' @examples
 #' landmark_path <- system.file("extdata", "test_femur.mrk.json",
@@ -129,10 +130,10 @@ import_mesh <- function(surface_mesh_filepath) {
 }
 
 
-#' check landmarks are close to the mesh
+#' Check landmarks are close to the mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh mesh object
-#' @param landmarks dataframe. Columns are landmark name, x, y, and z coordinates
+#' @param landmarks dataframe. Columns are landmark name, x, y, and z coords
 #' @param threshold Numeric. Distance landmark can be from surface without
 #' warning being thrown
 #' @return String. Returns a message warning that landmarks are not on bone
@@ -167,7 +168,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 }
 
 
-#' Check if mesh or vertex coordinates are fully contained within scan volume
+#' Check if surface model is fully contained within scan volume
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh mesh object (class \code{mesh3d}) or numeric
 #'    matrix/dataframe of vertex coordinates (cols: X, Y, Z).
@@ -240,7 +241,7 @@ bone_scan_check <- function(surface_mesh, nifti) {
 }
 
 
-#' fill bone
+#' Fills bone with orthogonally spaced points for internal analysis
 #' @param surface_mesh Mesh object
 #' @param spacing Numeric
 #' @return Matrix with internal point coordinates
@@ -284,12 +285,14 @@ fill_bone_points <- function(surface_mesh, spacing) {
 }
 
 
-#' Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
-#' @author Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
+#' Redefine surface points. Adds additional surface points (“sliders”) that
+#' are spatially distributed across the mesh surface. Adapted from geomorph
+#' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param landmarks Data frame with landmark coordinates (columns: ID, x, y, z)
-#' @param no_surface_sliders Numeric, number of additional surface points to generate
-#' @return Data frame. 3D coordinates for the combined set of original landmarks and the new surface points
+#' @param no_surface_sliders Numeric. No. of surface points to generate
+#' @return Data frame. 3D coordinates for the combined set of original
+#' landmarks and the new surface points
 #' @examples
 #' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
 #'                                  package = "BoneDensityMapping")
@@ -300,7 +303,8 @@ fill_bone_points <- function(surface_mesh, spacing) {
 #' mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
 #' @importFrom stats kmeans
 #' @export
-surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders) {
+surface_points_template <- function(surface_mesh, landmarks,
+                                    no_surface_sliders) {
   # extract vertex coordinates from mesh
   if (is.list(surface_mesh)) {
     vertices <- t(surface_mesh$vb)[, c(1:3)]
@@ -344,14 +348,14 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #'  points to visually verify correct orientation and laterality.
 #' @return Data frame. 3D coords of remapped surface points
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "SCAP001.stl",
+#' template_mesh_path <- system.file("extdata", "SCAP001.stl",
 #'                                  package = "BoneDensityMapping")
-#' scap_001_mesh <- import_mesh(surface_mesh_path)
+#' scap_001_mesh <- import_mesh(template_mesh_path)
 #' landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
 #'                              package = "BoneDensityMapping")
 #' scap_001_lmk <- import_lmks(landmark_path)
-#' template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk, 1000)
-#'
+#' template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk,
+#'                                            1000)
 #' surface_mesh_path <- system.file("extdata", "SCAP002.stl",
 #'                                  package = "BoneDensityMapping")
 #' scap_002_mesh <- import_mesh(surface_mesh_path)
@@ -359,12 +363,14 @@ surface_points_template <- function(surface_mesh, landmarks, no_surface_sliders)
 #'                              package = "BoneDensityMapping")
 #' scap_002_lmk <- import_lmks(landmark_path)
 #' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
-#'   template_coords, mirror = "x", plot_check = FALSE)
+#'                                         template_coords, mirror = "x",
+#'                                         plot_check = FALSE)
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom rgl open3d points3d title3d
 #' @importFrom stats dist
 #' @export
-surface_points_new <- function(surface_mesh, landmarks, template, mirror = FALSE, plot_check = FALSE) {
+surface_points_new <- function(surface_mesh, landmarks, template,
+                               mirror = FALSE, plot_check = FALSE) {
   # helper functions
   rotate.mat <- function(M, Y){
     k <- ncol(M)
@@ -577,10 +583,8 @@ surface_points_new <- function(surface_mesh, landmarks, template, mirror = FALSE
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
-surface_normal_intersect <- function(surface_mesh,
-                                     mapped_coords,
-                                     normal_dist = 3.0,
-                                     nifti,
+surface_normal_intersect <- function(surface_mesh, mapped_coords,
+                                     normal_dist = 3.0, nifti,
                                      betaCT = 1.0,
                                      sigmaCT = 1.0,
                                      rev_x = FALSE,
@@ -822,8 +826,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 }
 
 
-#' Takes matrix of points of length n with
-#' density vector of length n and maps it to a surface mesh of length m.
+#' ensity vector of length n and maps it to a surface mesh of length m.
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param template_pts Matrix
@@ -855,14 +858,8 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @importFrom Rvcg vcgPlyWrite
 #' @importFrom FNN get.knnx
 #' @export
-color_mesh <- function(surface_mesh,
-                       template_pts,
-                       density_vector,
-                       maxi = 2000,
-                       mini = 0,
-                       export_path,
-                       color_sel
-                       ) {
+color_mesh <- function(surface_mesh, template_pts, density_vector,
+                       maxi = 2000, mini = 0, export_path, color_sel) {
 
   mesh_template_match <- function(surface_mesh, template_points) {
     # Get vertex coordinates from the mesh
@@ -932,13 +929,9 @@ color_mesh <- function(surface_mesh,
 #' @importFrom methods hasArg
 #' @importFrom grDevices colorRampPalette
 #' @export
-plot_mesh <- function(surface_mesh,
-                      density_color = NULL,
-                      title,
-                      legend = TRUE,
-                      legend_color_sel = NULL,
-                      legend_maxi = 2000,
-                      legend_mini = 0,
+plot_mesh <- function(surface_mesh, density_color = NULL, title,
+                      legend = TRUE, legend_color_sel = NULL,
+                      legend_maxi = 2000, legend_mini = 0,
                       userMat = NULL) {
 
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
@@ -1238,7 +1231,8 @@ color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
 #' @param dist Numeric. Distance to check for vertices
 #' @return Numeric vector
 #' @importFrom rdist cdist
-rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05, dist) {
+rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05,
+                         dist) {
   # identify significant values
   sig_inds <- which(sig_vals < sig_level)
   sig_changes <- changes[sig_inds]
@@ -1289,7 +1283,7 @@ ct_coefficients <- function(table_height, calibration_curves, scanner, return_co
 }
 
 
-#' reorientate_landmarks
+#' Reorientate landmarks
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param landmark_path String
 #' @param x Integer Value to apply to convert mesh i.e. -1 will mirror x coords
