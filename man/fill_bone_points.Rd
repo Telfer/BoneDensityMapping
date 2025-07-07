@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{fill_bone_points}
 \alias{fill_bone_points}
-\title{fill bone}
+\title{Fills bone with orthogonally spaced points for internal analysis}
 \usage{
 fill_bone_points(surface_mesh, spacing)
 }
@@ -15,11 +15,14 @@ fill_bone_points(surface_mesh, spacing)
 Matrix with internal point coordinates
 }
 \description{
-fill bone
+Fills bone with orthogonally spaced points for internal analysis
 }
 \examples{
-surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-                                 package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_filepath)
-internal_fill <- fill_bone_points(surface_mesh, 3)
+\dontrun{
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
+  internal_fill <- fill_bone_points(surface_mesh, 2)
+}
 }

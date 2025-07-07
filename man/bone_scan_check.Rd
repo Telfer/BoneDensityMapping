@@ -2,13 +2,13 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{bone_scan_check}
 \alias{bone_scan_check}
-\title{Check if mesh or vertex coordinates are fully contained within scan volume}
+\title{Check if surface model is fully contained within scan volume}
 \usage{
 bone_scan_check(surface_mesh, nifti)
 }
 \arguments{
 \item{surface_mesh}{mesh object (class \code{mesh3d}) or numeric
-matrix/dataframe of vertex coordinates (cols: X, Y, Z).}
+matrix/dataframe of vertex coordinates (cols: X, Y, Z)}
 
 \item{nifti}{NIfTI image object representing CT scan.}
 }
@@ -18,18 +18,19 @@ If mesh is inside the scan volume, the function prints a summary
   raises an error.
 }
 \description{
-Check if mesh or vertex coordinates are fully contained within scan volume
+Check if surface model is fully contained within scan volume
 }
 \examples{
 \dontrun{
   # Download CT scan
-  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")
   download.file(url, scan_filepath, mode = "wb")
   nifti <- import_scan(scan_filepath)
-  surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-                                 package = "BoneDensityMapping")
-  surface_mesh <- import_mesh(surface_mesh_filepath)
+  url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url2, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
   bone_scan_check(surface_mesh, nifti)
 }
 }

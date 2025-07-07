@@ -2,14 +2,14 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{landmark_check}
 \alias{landmark_check}
-\title{check landmarks are close to the mesh}
+\title{Check landmarks are close to the mesh}
 \usage{
 landmark_check(surface_mesh, landmarks, threshold = 1)
 }
 \arguments{
 \item{surface_mesh}{mesh object}
 
-\item{landmarks}{dataframe. Columns are landmark name, x, y, and z coordinates}
+\item{landmarks}{dataframe. Columns are landmark name, x, y, and z coords}
 
 \item{threshold}{Numeric. Distance landmark can be from surface without
 warning being thrown}
@@ -19,16 +19,20 @@ String. Returns a message warning that landmarks are not on bone
 surface
 }
 \description{
-check landmarks are close to the mesh
+Check landmarks are close to the mesh
 }
 \examples{
-landmark_path <- system.file("extdata", "test_femur.fcsv",
+\dontrun{
+  # Download bone model
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
+  landmark_path <- system.file("extdata", "test_femur.fcsv",
                              package = "BoneDensityMapping")
-landmarks <- import_lmks(landmark_path)
-surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-                                 package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_filepath)
-landmark_check(surface_mesh, landmarks, threshold = 1.0)
+  landmarks <- import_lmks(landmark_path)
+  landmark_check(surface_mesh, landmarks, threshold = 1.0)
+}
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

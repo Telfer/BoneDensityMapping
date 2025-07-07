@@ -2,18 +2,19 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_normal_intersect}
 \alias{surface_normal_intersect}
-\title{Finds material properties of bone at surface point}
+\title{Find material properties of bone at surface point}
 \usage{
 surface_normal_intersect(
   surface_mesh,
   mapped_coords,
   normal_dist = 3,
   nifti,
-  betaCT = 1,
-  sigmaCT = 1,
+  ct_eqn = NULL,
+  ct_params = NULL,
   rev_x = FALSE,
   rev_y = FALSE,
-  rev_z = FALSE
+  rev_z = FALSE,
+  check_in_vol = FALSE
 )
 }
 \arguments{
@@ -25,40 +26,48 @@ surface_normal_intersect(
 
 \item{nifti}{Nifti CT scan image}
 
-\item{betaCT}{Numeric. Calibration value for CT to density calculation}
+\item{ct_eqn}{String. Equation to use for density calibration. Currently
+"linear" supported.}
 
-\item{sigmaCT}{Numeric. Calibration value for CT to density calculation}
+\item{ct_params}{Numeric vector. Calibration parameters for density
+calculation. For linear, first value is beta coefficient (y intercept),
+second value is sigma coefficient (gradient)}
 
 \item{rev_x}{Logical.}
 
 \item{rev_y}{Logical.}
 
 \item{rev_z}{Logical.}
+
+\item{check_in_vol}{Logical. Include check that model is in scans volume
+and print dimensions}
 }
 \value{
 Vector. Vector with value for each point on surface
 }
 \description{
-Finds material properties of bone at surface point
+Uses surface normal to find largest value within set distance from surface
 }
 \examples{
 \dontrun{
   # Download CT scan
-  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")
   download.file(url, scan_filepath, mode = "wb")
   nifti <- import_scan(scan_filepath)
-  surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-                                   package = "BoneDensityMapping")
-  surface_mesh <- import_mesh(surface_mesh_path)
+  url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url2, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
                                            no_surface_sliders = 100)
   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-                                       normal_dist = 3.0, nifti, betaCT = 1.0,
-                                       sigmaCT = 1.0)
+                                       normal_dist = 3.0, nifti,
+                                       ct_eqn = "linear",
+                                       ct_params = c(68.4, 1.106))
 }
 }
 \author{

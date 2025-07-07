@@ -2,9 +2,7 @@
 # use vertices for single bone example
 # error message (or fix) for bone model on border of scan?
 # make sure surface normal intersect and voxel point intersect have same behavior (rev_y)
-# ct-coefficients
 # does plot cross section need all the bits in example?
-# make stls smaller
 
 
 #' import landmark coordinates
@@ -56,7 +54,7 @@ import_lmks <- function(landmark_path) {
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
-#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   import_scan(scan_filepath)
@@ -117,9 +115,13 @@ import_scan <- function(scan_filepath) {
 #' @param surface_mesh_filepath String. File path to CT scan data. .stl or .ply
 #' @return mesh object
 #' @examples
-#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-#'                          package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_filepath)
+#' \dontrun{
+#'   # Download bone model
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url, bone_filepath, mode = "wb")
+#'   import_mesh(bone_filepath)
+#' }
 #' @importFrom Rvcg vcgImport
 #' @export
 import_mesh <- function(surface_mesh_filepath) {
@@ -139,13 +141,17 @@ import_mesh <- function(surface_mesh_filepath) {
 #' @return String. Returns a message warning that landmarks are not on bone
 #' surface
 #' @examples
-#' landmark_path <- system.file("extdata", "test_femur.fcsv",
+#' \dontrun{
+#'   # Download bone model
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
+#'   landmark_path <- system.file("extdata", "test_femur.fcsv",
 #'                              package = "BoneDensityMapping")
-#' landmarks <- import_lmks(landmark_path)
-#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' landmark_check(surface_mesh, landmarks, threshold = 1.0)
+#'   landmarks <- import_lmks(landmark_path)
+#'   landmark_check(surface_mesh, landmarks, threshold = 1.0)
+#' }
 #' @importFrom rdist cdist
 #' @importFrom utils read.csv
 #' @export
@@ -171,7 +177,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' Check if surface model is fully contained within scan volume
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh mesh object (class \code{mesh3d}) or numeric
-#'    matrix/dataframe of vertex coordinates (cols: X, Y, Z).
+#'    matrix/dataframe of vertex coordinates (cols: X, Y, Z)
 #' @param nifti NIfTI image object representing CT scan.
 #' @return If mesh is inside the scan volume, the function prints a summary
 #'   of the mesh and scan bounds. If any vertices lie outside the scan volume, it
@@ -179,13 +185,14 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
-#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_filepath)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   bone_scan_check(surface_mesh, nifti)
 #' }
 #' @export
@@ -246,10 +253,13 @@ bone_scan_check <- function(surface_mesh, nifti) {
 #' @param spacing Numeric
 #' @return Matrix with internal point coordinates
 #' @examples
-#' surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_filepath)
-#' internal_fill <- fill_bone_points(surface_mesh, 3)
+#' \dontrun{
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
+#'   internal_fill <- fill_bone_points(surface_mesh, 2)
+#' }
 #' @importFrom ptinpoly pip3d
 #' @importFrom stats runif
 #' @export
@@ -294,13 +304,16 @@ fill_bone_points <- function(surface_mesh, spacing) {
 #' @return Data frame. 3D coordinates for the combined set of original
 #' landmarks and the new surface points
 #' @examples
-#' surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                  package = "BoneDensityMapping")
-#' surface_mesh <- import_mesh(surface_mesh_path)
-#' landmark_path <- system.file("extdata", "test_femur.mrk.json",
-#'                              package = "BoneDensityMapping")
-#' landmarks <- import_lmks(landmark_path)
-#' mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
+#' \dontrun{
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
+#'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
+#'                                package = "BoneDensityMapping")
+#'   landmarks <- import_lmks(landmark_path)
+#'   mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
+#' }
 #' @importFrom stats kmeans
 #' @export
 surface_points_template <- function(surface_mesh, landmarks,
@@ -348,23 +361,27 @@ surface_points_template <- function(surface_mesh, landmarks,
 #'  points to visually verify correct orientation and laterality.
 #' @return Data frame. 3D coords of remapped surface points
 #' @examples
-#' template_mesh_path <- system.file("extdata", "SCAP001.stl",
-#'                                  package = "BoneDensityMapping")
-#' scap_001_mesh <- import_mesh(template_mesh_path)
-#' landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
+#' \dontrun{
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP001.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url, bone_filepath, mode = "wb")
+#'   scap_001_mesh <- import_mesh(bone_filepath)
+#'   landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
 #'                              package = "BoneDensityMapping")
-#' scap_001_lmk <- import_lmks(landmark_path)
-#' template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk,
+#'   scap_001_lmk <- import_lmks(landmark_path)
+#'   template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk,
 #'                                            1000)
-#' surface_mesh_path <- system.file("extdata", "SCAP002.stl",
-#'                                  package = "BoneDensityMapping")
-#' scap_002_mesh <- import_mesh(surface_mesh_path)
-#' landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP002.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   scap_002_mesh <- import_mesh(bone_filepath)
+#'   landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
 #'                              package = "BoneDensityMapping")
-#' scap_002_lmk <- import_lmks(landmark_path)
-#' scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
-#'                                         template_coords, mirror = "x",
-#'                                         plot_check = FALSE)
+#'   scap_002_lmk <- import_lmks(landmark_path)
+#'   scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
+#'                                           template_coords, mirror = "x",
+#'                                           plot_check = FALSE)
+#' }
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom rgl open3d points3d title3d
 #' @importFrom stats dist
@@ -549,48 +566,56 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 }
 
 
-#' Finds material properties of bone at surface point
+#' Find material properties of bone at surface point
+#'
+#' Uses surface normal to find largest value within set distance from surface
+#'
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param mapped_coords Data frame. 3D coords of remapped surface points
 #' @param normal_dist Numeric. Distance surface normal should penetrate surface
 #' @param nifti Nifti CT scan image
-#' @param betaCT Numeric. Calibration value for CT to density calculation
-#' @param sigmaCT Numeric. Calibration value for CT to density calculation
+#' @param ct_eqn String. Equation to use for density calibration. Currently
+#' "linear" supported.
+#' @param ct_params Numeric vector. Calibration parameters for density
+#' calculation. For linear, first value is beta coefficient (y intercept),
+#' second value is sigma coefficient (gradient)
 #' @param rev_x Logical.
 #' @param rev_y Logical.
 #' @param rev_z Logical.
+#' @param check_in_vol Logical. Include check that model is in scans volume
+#' and print dimensions
 #' @return Vector. Vector with value for each point on surface
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
-#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
 #'   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-#'                                        normal_dist = 3.0, nifti, betaCT = 1.0,
-#'                                        sigmaCT = 1.0)
+#'                                        normal_dist = 3.0, nifti,
+#'                                        ct_eqn = "linear",
+#'                                        ct_params = c(68.4, 1.106))
 #' }
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
 surface_normal_intersect <- function(surface_mesh, mapped_coords,
                                      normal_dist = 3.0, nifti,
-                                     betaCT = 1.0,
-                                     sigmaCT = 1.0,
-                                     rev_x = FALSE,
-                                     rev_y = FALSE,
-                                     rev_z = FALSE) {
-
+                                     ct_eqn = NULL, ct_params = NULL,
+                                     rev_x = FALSE, rev_y = FALSE,
+                                     rev_z = FALSE, check_in_vol = FALSE) {
+  # extract details from mesh
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
 
@@ -622,34 +647,10 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
     z_seq <- seq((nifti)@qoffset_z, by = z_by, length.out = dims[3])
   }
 
-  # check bone is within scan volume
-  mesh_x_min <- min(vertices[, 1])
-  mesh_x_max <- max(vertices[, 1])
-  mesh_y_min <- min(vertices[, 2])
-  mesh_y_max <- max(vertices[, 2])
-  mesh_z_min <- min(vertices[, 3])
-  mesh_z_max <- max(vertices[, 3])
-  vol_x_min <- min(x_seq)
-  vol_x_max <- max(x_seq)
-  vol_y_min <- min(y_seq)
-  vol_y_max <- max(y_seq)
-  vol_z_min <- min(z_seq)
-  vol_z_max <- max(z_seq)
-  x1_good <- mesh_x_min > vol_x_min
-  x2_good <- mesh_x_max < vol_x_max
-  y1_good <- mesh_y_min > vol_y_min
-  y2_good <- mesh_y_max < vol_y_max
-  z1_good <- mesh_z_min > vol_z_min
-  z2_good <- mesh_z_max < vol_z_max
-  vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
-  df <- data.frame(
-    Axis = c("X", "Y", "Z"),
-    Mesh_Min = c(mesh_x_min, mesh_y_min, mesh_z_min),
-    Mesh_Max = c(mesh_x_max, mesh_y_max, mesh_z_max),
-    Scan_Min = c(vol_x_min, vol_y_min, vol_z_min),
-    Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
-  )
-  if (!all(vals)) {stop("Mesh not within scan volume")}
+  # check vertices are in scan volume
+  if (check_in_vol == TRUE) {
+    bone_scan_check(surface_coords, nifti)
+  }
 
   # Find voxels intercepted by line
   mat_peak <- rep(NA, times = nrow(vertices))
@@ -683,8 +684,10 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
     mat_peak[i] <- max(max_line)
   }
 
-  # Convert Hounsfield units (HU) to density using calibration values
-  mat_peak <- ((mat_peak - betaCT) / sigmaCT)
+  # Convert CT numbers to density using calibration values
+  if (hasArg(ct_eqn)) {
+    mat_peak <- ct_calibration(mat_peak, "linear", ct_params)
+  }
 
   # Return the vector of density values for each mapped coordinate
   return(mat_peak)
@@ -695,31 +698,38 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param vertex_coords Matrix
 #' @param nifti nifti object
-#' @param betaCT Calibration value for CT to density calculation
-#' @param sigmaCT Calibration value for CT to density calculation
-#' @param check_in_vol Logical Include check that model is in scans volume
+#' @param ct_eqn String. Equation to use for density calibration. Currently
+#' "linear" supported.
+#' @param ct_params Numeric vector. Calibration parameters for density
+#' calculation. For linear, first value is beta coefficient (y intercept),
+#' second value is sigma coefficient (gradient)
+#' @param check_in_vol Logical. Include check that model is in scans volume
 #' and print dimensions
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
-#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
 #'   mat_peak <- voxel_point_intersect(mapped_coords, nifti,
-#'    betaCT = 1.0, sigmaCT = 1.0, check_in_vol = TRUE)
+#'                                     ct_eqn = "linear",
+#'                                     ct_params = c(68.4, 1.106),
+#'                                     check_in_vol = FALSE)
 #' }
 #' @return Vector. Vector with value for each point on surface
 #' @export
-voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 1.0,
+voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
+                                  ct_params = NULL,
                                   check_in_vol = FALSE) {
   vertex_coords <- data.matrix(vertex_coords)
   dims <- dim(vertex_coords)
@@ -756,8 +766,10 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 
     mat_peak[i] <- img_data[voxel[1], voxel[2], voxel[3]]
   }
 
-  # convert to density
-  mat_peak <- ((mat_peak - betaCT) / sigmaCT)
+  # Convert CT numbers to density using calibration values
+  if (hasArg(ct_eqn)) {
+    mat_peak <- ct_calibration(mat_peak, "linear", ct_params)
+  }
 
   # return
   return(mat_peak)
@@ -773,20 +785,22 @@ voxel_point_intersect <- function(vertex_coords, nifti, betaCT = 1.0, sigmaCT = 
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
-#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+#'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   vertices <- t(surface_mesh$vb)[, c(1:3)]
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
-#'   mat_peak <- voxel_point_intersect(vertices, nifti)
+#'   mat_peak <- voxel_point_intersect(vertices, nifti, ct_eqn = "linear",
+#'                                     ct_params = c(68.4, 1.106),)
 #'   colors <- color_mapping(mat_peak)
 #' }
 #'
@@ -826,7 +840,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 }
 
 
-#' ensity vector of length n and maps it to a surface mesh of length m.
+#' Density vector of length n and maps it to a surface mesh of length m.
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param template_pts Matrix
@@ -843,17 +857,20 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   vertices <- t(surface_mesh$vb)[, c(1:3)]
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
-#'   mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
-#'   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=1000, mini=0)
+#'   dens <- voxel_point_intersect(mapped_coords, nifti,
+#'                                 ct_eqn = "linear",
+#'                                 ct_params = c(68.4, 1.106))
+#'   colored_mesh <- color_mesh(surface_mesh, mapped_coords, dens)
 #' }
 #' @importFrom Rvcg vcgPlyWrite
 #' @importFrom FNN get.knnx
@@ -910,9 +927,10 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   vertices <- t(surface_mesh$vb)[, c(1:3)]
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
@@ -1010,9 +1028,10 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title,
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
 #'   download.file(url, scan_filepath, mode = "wb")
 #'   nifti <- import_scan(scan_filepath)
-#'   surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-#'                                    package = "BoneDensityMapping")
-#'   surface_mesh <- import_mesh(surface_mesh_path)
+#'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+#'   bone_filepath <- tempfile(fileext = ".stl")
+#'   download.file(url2, bone_filepath, mode = "wb")
+#'   surface_mesh <- import_mesh(bone_filepath)
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
@@ -1022,14 +1041,14 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title,
 #'              betaCT = 1.0, sigmaCT = 1.0)
 #'   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
 #'   internal_fill <- fill_bone_points(surface_mesh, 3)
-#'   internal_density <- voxel_point_intersect(internal_fill, nifti)
+#'   internal_density <- voxel_point_intersect(internal_fill, nifti,
+#'                                             ct_eqn = "linear",
+#'                                             ct_params = c(68.4, 1.106))
 #'   internal_colors <- color_mapping(internal_density)
 #'   plot_cross_section_bone(colored_mesh, surface_colors = NULL,
 #'                           internal_fill, internal_colors, slice_axis = 'x',
 #'                           slice_val = 0.5)
 #' }
-#'
-#'
 #' @import rgl
 #' @import geometry
 #' @import concaveman
@@ -1261,25 +1280,19 @@ rm_local_sig <- function(vertices, sig_vals, changes, sig_level = 0.05,
 
 #' Sigma beta CT calculations
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param table_height Numeric
-#' @param calibration_curves matrix
-#' @param scanner String "CT1" or "CT2"
-#' @param return_coeff String
-#' @return Vector with two elements, sigma and beta
-#' @importFrom dplyr filter
-#' @importFrom stats approx
-#' @importFrom magrittr "%>%"
-ct_coefficients <- function(table_height, calibration_curves, scanner, return_coeff = "sigma") {
-  Scanner <- NULL
-
-  # get curves for scanner
-  calibration_curves <- calibration_curves %>% filter(Scanner == scanner)
-  sigmaCT <- approx(calibration_curves$TableHeight, calibration_curves$sigma, table_height)$y
-  betaCT <- approx(calibration_curves$TableHeight, calibration_curves$beta, table_height)$y
+#' @param ct_nos Numeric vector. CT numbers from scan
+#' @param calibration_type String. Currently only linear supported.
+#' @param params Numeric vector. beta and sigma values for calibration eqn
+#' @return Vector with estimated density values  in mg/cm^3
+ct_calibration <- function(ct_nos, calibration_type, params) {
+  # calibration equation
+  if (calibration_type == "linear") {
+    if (length(params) != 2) {stop("params needs beta and sigma coefficients")}
+    density_vals <- (ct_nos - params[1]) / params[2]
+  }
 
   # return
-  if(return_coeff == "sigma") {return(sigmaCT)}
-  if(return_coeff == "beta") {return(betaCT)}
+  return(density_vals)
 }
 
 

@@ -18,7 +18,7 @@ import CT scan
 \examples{
 \dontrun{
   # Download CT scan
-  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")
   download.file(url, scan_filepath, mode = "wb")
   import_scan(scan_filepath)

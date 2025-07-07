@@ -2,7 +2,8 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_points_template}
 \alias{surface_points_template}
-\title{Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.}
+\title{Redefine surface points. Adds additional surface points (“sliders”) that
+are spatially distributed across the mesh surface. Adapted from geomorph}
 \usage{
 surface_points_template(surface_mesh, landmarks, no_surface_sliders)
 }
@@ -11,23 +12,28 @@ surface_points_template(surface_mesh, landmarks, no_surface_sliders)
 
 \item{landmarks}{Data frame with landmark coordinates (columns: ID, x, y, z)}
 
-\item{no_surface_sliders}{Numeric, number of additional surface points to generate}
+\item{no_surface_sliders}{Numeric. No. of surface points to generate}
 }
 \value{
-Data frame. 3D coordinates for the combined set of original landmarks and the new surface points
+Data frame. 3D coordinates for the combined set of original
+landmarks and the new surface points
 }
 \description{
-Redefine surface points. Adds additional surface points (“sliders”) that are spatially distributed across the mesh surface.
+Redefine surface points. Adds additional surface points (“sliders”) that
+are spatially distributed across the mesh surface. Adapted from geomorph
 }
 \examples{
-surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-                                 package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_path)
-landmark_path <- system.file("extdata", "test_femur.mrk.json",
-                             package = "BoneDensityMapping")
-landmarks <- import_lmks(landmark_path)
-mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
+\dontrun{
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
+  landmark_path <- system.file("extdata", "test_femur.mrk.json",
+                               package = "BoneDensityMapping")
+  landmarks <- import_lmks(landmark_path)
+  mapped_coords <- surface_points_template(surface_mesh, landmarks, 1000)
+}
 }
 \author{
-Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
+Scott Telfer \email{scott.telfer@gmail.com}
 }

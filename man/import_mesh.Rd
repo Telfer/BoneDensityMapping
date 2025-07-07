@@ -16,9 +16,13 @@ mesh object
 import surface mesh
 }
 \examples{
-surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-                         package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_filepath)
+\dontrun{
+  # Download bone model
+  url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url, bone_filepath, mode = "wb")
+  import_mesh(bone_filepath)
+}
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}

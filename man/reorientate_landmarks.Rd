@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{reorientate_landmarks}
 \alias{reorientate_landmarks}
-\title{reorientate_landmarks}
+\title{Reorientate landmarks}
 \usage{
 reorientate_landmarks(landmark_path, x = 1, y = 1, z = 1)
 }
@@ -19,7 +19,7 @@ reorientate_landmarks(landmark_path, x = 1, y = 1, z = 1)
 Overwritten landmark file
 }
 \description{
-reorientate_landmarks
+Reorientate landmarks
 }
 \examples{
 landmark_path <- system.file("extdata", "test_femur.mrk.json",

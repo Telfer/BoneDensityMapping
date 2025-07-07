@@ -2,8 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{color_mesh}
 \alias{color_mesh}
-\title{Takes matrix of points of length n with
-density vector of length n and maps it to a surface mesh of length m.}
+\title{Density vector of length n and maps it to a surface mesh of length m.}
 \usage{
 color_mesh(
   surface_mesh,
@@ -34,8 +33,7 @@ color_mesh(
 Mesh with added color dimension
 }
 \description{
-Takes matrix of points of length n with
-density vector of length n and maps it to a surface mesh of length m.
+Density vector of length n and maps it to a surface mesh of length m.
 }
 \examples{
 \dontrun{
@@ -44,17 +42,20 @@ density vector of length n and maps it to a surface mesh of length m.
   scan_filepath <- tempfile(fileext = ".nii.gz")
   download.file(url, scan_filepath, mode = "wb")
   nifti <- import_scan(scan_filepath)
-  surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-                                   package = "BoneDensityMapping")
-  surface_mesh <- import_mesh(surface_mesh_path)
+  url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url2, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
   vertices <- t(surface_mesh$vb)[, c(1:3)]
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
                                            no_surface_sliders = 100)
-  mat_peak <- voxel_point_intersect(mapped_coords, nifti, betaCT = 1.0, sigmaCT = 1.0)
-  colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=1000, mini=0)
+  dens <- voxel_point_intersect(mapped_coords, nifti,
+                                ct_eqn = "linear",
+                                ct_params = c(68.4, 1.106))
+  colored_mesh <- color_mesh(surface_mesh, mapped_coords, dens)
 }
 }
 \author{

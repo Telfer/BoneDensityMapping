@@ -64,9 +64,10 @@ Clips the surface mesh at a given axis and value, and overlays a 2D projection o
   scan_filepath <- tempfile(fileext = ".nii.gz")
   download.file(url, scan_filepath, mode = "wb")
   nifti <- import_scan(scan_filepath)
-  surface_mesh_path <- system.file("extdata", "test_CT_femur.stl",
-                                   package = "BoneDensityMapping")
-  surface_mesh <- import_mesh(surface_mesh_path)
+  url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+  bone_filepath <- tempfile(fileext = ".stl")
+  download.file(url2, bone_filepath, mode = "wb")
+  surface_mesh <- import_mesh(bone_filepath)
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
@@ -76,12 +77,12 @@ Clips the surface mesh at a given axis and value, and overlays a 2D projection o
              betaCT = 1.0, sigmaCT = 1.0)
   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
   internal_fill <- fill_bone_points(surface_mesh, 3)
-  internal_density <- voxel_point_intersect(internal_fill, nifti)
+  internal_density <- voxel_point_intersect(internal_fill, nifti,
+                                            ct_eqn = "linear",
+                                            ct_params = c(68.4, 1.106))
   internal_colors <- color_mapping(internal_density)
   plot_cross_section_bone(colored_mesh, surface_colors = NULL,
                           internal_fill, internal_colors, slice_axis = 'x',
                           slice_val = 0.5)
 }
-
-
 }
