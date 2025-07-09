@@ -1,8 +1,16 @@
-test_that("import_scan reads valid .nii file", {
-  path <- system.file("extdata", "test_CT_hip.nii", package = "BoneDensityMapping")
-  scan <- import_scan(path)
+url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+bone_filepath <- tempfile(fileext = ".stl")
+download.file(url, bone_filepath, mode = "wb")
+surface_mesh <- import_mesh(bone_filepath)
 
-  expect_s4_class(scan, "nifti")
+url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+scan_filepath <- tempfile(fileext = ".nii.gz")
+download.file(url2, scan_filepath, mode = "wb")
+nifti <- import_scan(scan_filepath)
+
+test_that("import_scan reads valid .nii file", {
+
+  expect_s4_class(nifti, "nifti")
   expect_true(length(scan) > 0)
 })
 

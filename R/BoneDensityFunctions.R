@@ -1,5 +1,4 @@
 ## To-do
-# use vertices for single bone example
 # error message (or fix) for bone model on border of scan?
 # make sure surface normal intersect and voxel point intersect have same behavior (rev_y)
 # does plot cross section need all the bits in example?
@@ -936,7 +935,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
+#'                                            no_surface_sliders = 1000)
 #'   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
 #'                                        normal_dist = 3.0, nifti, rev_y=FALSE)
 #'   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
@@ -1036,9 +1035,8 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title,
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
-#'   mat_peak <- voxel_point_intersect(mapped_coords, nifti,
-#'              betaCT = 1.0, sigmaCT = 1.0)
+#'                                            no_surface_sliders = 1000)
+#'   mat_peak <- voxel_point_intersect(mapped_coords, nifti)
 #'   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
 #'   internal_fill <- fill_bone_points(surface_mesh, 3)
 #'   internal_density <- voxel_point_intersect(internal_fill, nifti,
@@ -1065,8 +1063,8 @@ plot_cross_section_bone <- function(surface_mesh,
                                     userMat = NULL,
                                     legend = TRUE,
                                     legend_color_sel = NULL,
-                                    legend_maxi = NULL,
-                                    legend_mini = NULL) {
+                                    legend_maxi = 2000,
+                                    legend_mini = 0) {
   # check inputs
   stopifnot(nrow(fill_coords) == length(fill_colors))
   if (is.null(slice_axis) || is.null(slice_val)) {
