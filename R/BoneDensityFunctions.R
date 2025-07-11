@@ -1,5 +1,4 @@
 ## To-do
-# use vertices for single bone example
 # error message (or fix) for bone model on border of scan?
 # make sure surface normal intersect and voxel point intersect have same behavior (rev_y)
 # does plot cross section need all the bits in example?
@@ -1037,8 +1036,7 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title,
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
-#'   mat_peak <- voxel_point_intersect(mapped_coords, nifti,
-#'              betaCT = 1.0, sigmaCT = 1.0)
+#'   mat_peak <- voxel_point_intersect(mapped_coords, nifti)
 #'   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
 #'   internal_fill <- fill_bone_points(surface_mesh, 3)
 #'   internal_density <- voxel_point_intersect(internal_fill, nifti,

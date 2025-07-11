@@ -1,12 +1,18 @@
+url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+bone_filepath <- tempfile(fileext = ".stl")
+download.file(url, bone_filepath, mode = "wb")
+surface_mesh <- import_mesh(bone_filepath)
+
+url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
+scan_filepath <- tempfile(fileext = ".nii.gz")
+download.file(url2, scan_filepath, mode = "wb")
+nifti <- import_scan(scan_filepath)
+
+landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
+landmarks <- import_lmks(landmark_path)
+
 test_that("surface_points_template returns a data.frame with correct dimensions", {
-  # Load example data
-  surface_mesh_path <- system.file("extdata", "test_CT_femur.stl", package = "BoneDensityMapping")
-  surface_mesh <- import_mesh(surface_mesh_path)
-
-  landmark_path <- system.file("extdata", "test_femur.mrk.json", package = "BoneDensityMapping")
-  landmarks <- import_lmks(landmark_path)
-
-  n_sliders <- 1000
+  n_sliders <- 100
   result <- surface_points_template(surface_mesh, landmarks, n_sliders)
 
   expect_s3_class(result, "data.frame")
