@@ -1,13 +1,9 @@
 ## To-do
 # error message (or fix) for bone model on border of scan?
-# why does color mapping have mapped coordinates?
-# make sure surface normal and voxel point intersect have same behavior (rev_y)
 # does plot cross section need all the bits in example?
 # examples in surface normal intersect and voxel point intersect for single bone
-# vertices not needed in plot_mesh example?
 # make maxi and mini defaults max and min of vector
-# why add noise to fill_bone_points
-# in surface_normal_intersect, if mapped coords is NULL use surface mesh vertices
+# why add noise to fill_bone_points?
 
 
 #' import landmark coordinates
@@ -746,7 +742,9 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords = NULL,
 #' @return Vector. Vector with value for each point on surface
 #' @export
 voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
-                                  ct_params = NULL, check_in_vol = FALSE) {
+                                  ct_params = NULL, rev_x = FALSE,
+                                  rev_y = FALSE, rev_z = FALSE,
+                                  check_in_vol = FALSE) {
   vertex_coords <- data.matrix(vertex_coords)
   dims <- dim(vertex_coords)
   vertex_coords <- as.numeric(vertex_coords)
@@ -813,8 +811,6 @@ voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
-#'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
 #'   mat_peak <- voxel_point_intersect(vertices, nifti, ct_eqn = "linear",
 #'                                     ct_params = c(68.4, 1.106),)
 #'   colors <- color_mapping(mat_peak)
