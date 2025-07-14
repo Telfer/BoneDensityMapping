@@ -6,6 +6,8 @@
 # examples in surface normal intersect and voxel point intersect for single bone
 # vertices not needed in plot_mesh example?
 # make maxi and mini defaults max and min of vector
+# why add noise to fill_bone_points
+# in surface_normal_intersect, if mapped coords is NULL use surface mesh vertices
 
 
 #' import landmark coordinates
@@ -579,7 +581,8 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 #' Find material properties of bone at surface point using surface normal
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
-#' @param mapped_coords Data frame. 3D coords of remapped surface points
+#' @param mapped_coords Data frame. 3D coords of remapped surface points. If
+#' NULL, surface_mesh vertices will be used
 #' @param normal_dist Numeric. Distance surface normal should penetrate surface
 #' @param nifti Nifti CT scan image
 #' @param ct_eqn String. Equation to use for density calibration. Currently
@@ -609,15 +612,14 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
 #'                                            no_surface_sliders = 100)
-#'   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-#'                                        normal_dist = 3.0, nifti,
-#'                                        ct_eqn = "linear",
+#'   mat_peak <- surface_normal_intersect(surface_mesh, normal_dist = 3.0,
+#'                                        nifti = nifti, ct_eqn = "linear",
 #'                                        ct_params = c(68.4, 1.106))
 #' }
 #' @importFrom oro.nifti img_data
 #' @importFrom RNifti niftiHeader
 #' @export
-surface_normal_intersect <- function(surface_mesh, mapped_coords,
+surface_normal_intersect <- function(surface_mesh, mapped_coords = NULL,
                                      normal_dist = 3.0, nifti,
                                      ct_eqn = NULL, ct_params = NULL,
                                      rev_x = FALSE, rev_y = FALSE,
@@ -626,11 +628,17 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
   surface_coords <- t(surface_mesh$vb)[, c(1:3)]
   surface_normals <- t(surface_mesh$normals)[, c(1:3)]
 
-  # Convert mapped_coords to numeric matrix form for calculations
-  vertices <- data.matrix(mapped_coords)
-  dims <- dim(vertices)
-  vertices <- as.numeric(vertices)
-  dim(vertices) <- dims
+  # Convert mapped_coords to numeric matrix for calculations
+  if (hasArg(mapped_coords)) {
+    vertices <- data.matrix(mapped_coords)
+    dims <- dim(vertices)
+    vertices <- as.numeric(vertices)
+    dim(vertices) <- dims
+    mat_peak <- rep(NA, times = nrow(vertices))
+  } else {
+    mat_peak <- rep(NA, times = nrow(surface_coords))
+    vertices <- surface_coords
+  }
 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
@@ -660,19 +668,21 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
   }
 
   # Find voxels intercepted by line
-  mat_peak <- rep(NA, times = nrow(vertices))
-
-  # Loop through each surface point to sample CT data along the surface normal
+  ## Loop through each surface point to sample CT data along the surface normal
   for (i in 1:nrow(vertices)) {
-    # find nearest point
-    yy <- t(as.matrix(vertices[i, ], 1, 3))
-    y <- cdist(yy, surface_coords)
-    matched_point <- which.min(y)
+    # find start and end points of normal line
+    if (hasArg(mapped_coords)) {
+      yy <- t(as.matrix(vertices[i, ], 1, 3))
+      y <- cdist(yy, surface_coords)
+      matched_point <- which.min(y)
+      start_point <- surface_coords[matched_point, ]
+      end_point <- surface_coords[matched_point, ] + (surface_normals[matched_point, ] * -1 * normal_dist)
+    } else {
+      start_point <- surface_coords[i, ]
+      end_point <- surface_coords[i, ] + (surface_normals[i, ] * -1 * normal_dist)
+    }
 
-    # Define start and end points along the surface normal line (penetrate normal_dist mm inside).
     # Interpolate 10 points along this line inside the bone surface
-    start_point <- surface_coords[matched_point, ]
-    end_point <- surface_coords[matched_point, ] + (surface_normals[matched_point, ] * -1 * normal_dist)
     px <- seq(from = start_point[1], to = end_point[1], length.out = 10)
     py <- seq(from = start_point[2], to = end_point[2], length.out = 10)
     pz <- seq(from = start_point[3], to = end_point[3], length.out = 10)
@@ -693,7 +703,7 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
 
   # Convert CT numbers to density using calibration values
   if (hasArg(ct_eqn)) {
-    mat_peak <- ct_calibration(mat_peak, "linear", ct_params)
+    mat_peak <- ct_calibration(mat_peak, ct_eqn, ct_params)
   }
 
   # Return the vector of density values for each mapped coordinate
