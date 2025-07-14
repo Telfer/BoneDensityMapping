@@ -1,7 +1,11 @@
 ## To-do
 # error message (or fix) for bone model on border of scan?
-# make sure surface normal intersect and voxel point intersect have same behavior (rev_y)
+# why does color mapping have mapped coordinates?
+# make sure surface normal and voxel point intersect have same behavior (rev_y)
 # does plot cross section need all the bits in example?
+# examples in surface normal intersect and voxel point intersect for single bone
+# vertices not needed in plot_mesh example?
+# make maxi and mini defaults max and min of vector
 
 
 #' import landmark coordinates
@@ -111,7 +115,7 @@ import_scan <- function(scan_filepath) {
 
 #' import surface mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
-#' @param surface_mesh_filepath String. File path to CT scan data. .stl or .ply
+#' @param surface_mesh_filepath String. File path to bone models. .stl or .ply
 #' @return mesh object
 #' @examples
 #' \dontrun{
@@ -134,7 +138,7 @@ import_mesh <- function(surface_mesh_filepath) {
 #' Check landmarks are close to the mesh
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh mesh object
-#' @param landmarks dataframe. Columns are landmark name, x, y, and z coords
+#' @param landmarks Dataframe. Columns are landmark name, x, y, and z coords
 #' @param threshold Numeric. Distance landmark can be from surface without
 #' warning being thrown
 #' @return String. Returns a message warning that landmarks are not on bone
@@ -169,7 +173,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
     bad_ids <- landmarks$lmk_id[dists > threshold]
     message("Landmarks not on bone surface: ", paste(bad_ids, collapse = ", "))
   }
-  else message("Landmarks are on bone surface.")
+  else message("All landmarks are on bone surface.")
 }
 
 
@@ -178,8 +182,9 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' @param surface_mesh mesh object (class \code{mesh3d}) or numeric
 #'    matrix/dataframe of vertex coordinates (cols: X, Y, Z)
 #' @param nifti NIfTI image object representing CT scan.
-#' @return If mesh is inside the scan volume, the function prints a summary
-#'   of the mesh and scan bounds. If any vertices lie outside the scan volume, it
+#' @param return_limits Logical. If TRUE returns a summary of the bounding boxes
+#'  of the scan and mesh
+#' @return If any vertices lie outside the scan volume, it
 #'   raises an error.
 #' @examples
 #' \dontrun{
@@ -192,10 +197,10 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url2, bone_filepath, mode = "wb")
 #'   surface_mesh <- import_mesh(bone_filepath)
-#'   bone_scan_check(surface_mesh, nifti)
+#'   bone_scan_check(surface_mesh, nifti, return_limits = TRUE)
 #' }
 #' @export
-bone_scan_check <- function(surface_mesh, nifti) {
+bone_scan_check <- function(surface_mesh, nifti, return_limits = FALSE) {
 
   if (inherits(surface_mesh, "mesh3d")) {
     vertices <- t(surface_mesh$vb)[, 1:3]
@@ -242,8 +247,14 @@ bone_scan_check <- function(surface_mesh, nifti) {
     Scan_Min = c(vol_x_min, vol_y_min, vol_z_min),
     Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
   )
-  print(df, digits = 3)
+
+  # return message if bone outside scan limits
   if (!all(vals)) {stop("Mesh not within scan volume.")}
+
+  # return table if requested
+  if (return_limits == TRUE) {
+    return(df)
+  }
 }
 
 
@@ -348,8 +359,8 @@ surface_points_template <- function(surface_mesh, landmarks,
 }
 
 
-#' New surface points from template
-#' @author Scott Telfer \email{scott.telfer@gmail.com} Adpated from geomorph
+#' New mapped surface points from template
+#' @author Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
 #' @param surface_mesh List. Mesh data imported via ply_import function
 #' @param landmarks Data frame. Contains 3D coords of landmarks
 #' @param template Data frame. 3D coords of remapped surface points
@@ -366,16 +377,16 @@ surface_points_template <- function(surface_mesh, landmarks,
 #'   download.file(url, bone_filepath, mode = "wb")
 #'   scap_001_mesh <- import_mesh(bone_filepath)
 #'   landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
-#'                              package = "BoneDensityMapping")
+#'                                package = "BoneDensityMapping")
 #'   scap_001_lmk <- import_lmks(landmark_path)
 #'   template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk,
-#'                                            1000)
+#'                                              1000)
 #'   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP002.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url2, bone_filepath, mode = "wb")
 #'   scap_002_mesh <- import_mesh(bone_filepath)
 #'   landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
-#'                              package = "BoneDensityMapping")
+#'                                package = "BoneDensityMapping")
 #'   scap_002_lmk <- import_lmks(landmark_path)
 #'   scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
 #'                                           template_coords, mirror = "x",
@@ -565,10 +576,7 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 }
 
 
-#' Find material properties of bone at surface point
-#'
-#' Uses surface normal to find largest value within set distance from surface
-#'
+#' Find material properties of bone at surface point using surface normal
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param mapped_coords Data frame. 3D coords of remapped surface points
@@ -698,7 +706,7 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
 #' @param vertex_coords Matrix
 #' @param nifti nifti object
 #' @param ct_eqn String. Equation to use for density calibration. Currently
-#' "linear" supported.
+#' only "linear" is supported.
 #' @param ct_params Numeric vector. Calibration parameters for density
 #' calculation. For linear, first value is beta coefficient (y intercept),
 #' second value is sigma coefficient (gradient)
@@ -728,8 +736,7 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords,
 #' @return Vector. Vector with value for each point on surface
 #' @export
 voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
-                                  ct_params = NULL,
-                                  check_in_vol = FALSE) {
+                                  ct_params = NULL, check_in_vol = FALSE) {
   vertex_coords <- data.matrix(vertex_coords)
   dims <- dim(vertex_coords)
   vertex_coords <- as.numeric(vertex_coords)
@@ -839,7 +846,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 }
 
 
-#' Density vector of length n and maps it to a surface mesh of length m.
+#' takes density vector of length n and maps it to a surface mesh of length m.
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param template_pts Matrix

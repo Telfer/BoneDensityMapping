@@ -17,8 +17,8 @@ plot_cross_section_bone(
   userMat = NULL,
   legend = TRUE,
   legend_color_sel = NULL,
-  legend_maxi = 2000,
-  legend_mini = 0
+  legend_maxi = NULL,
+  legend_mini = NULL
 )
 }
 \arguments{
@@ -72,7 +72,7 @@ Clips the surface mesh at a given axis and value, and overlays a 2D projection o
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 1000)
+                                           no_surface_sliders = 100)
   mat_peak <- voxel_point_intersect(mapped_coords, nifti)
   colored_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak)
   internal_fill <- fill_bone_points(surface_mesh, 3)

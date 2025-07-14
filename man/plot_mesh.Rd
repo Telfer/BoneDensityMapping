@@ -54,7 +54,7 @@ plot mesh
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 1000)
+                                           no_surface_sliders = 100)
   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
                                        normal_dist = 3.0, nifti, rev_y=FALSE)
   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
