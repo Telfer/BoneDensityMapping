@@ -948,10 +948,11 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
+#'                                            no_surface_sliders = 5000)
 #'   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
 #'                                        normal_dist = 3.0, nifti, rev_y=FALSE)
-#'   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000, mini=0)
+#'   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000,
+#'                            mini=0)
 #'   plot <- plot_mesh(color_mesh)
 #' }
 #' @importFrom rgl shade3d view3d bgplot3d
@@ -959,7 +960,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #' @importFrom methods hasArg
 #' @importFrom grDevices colorRampPalette
 #' @export
-plot_mesh <- function(surface_mesh, density_color = NULL, title,
+plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
                       legend = TRUE, legend_color_sel = NULL,
                       legend_maxi = 2000, legend_mini = 0,
                       userMat = NULL) {
