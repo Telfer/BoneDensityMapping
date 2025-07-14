@@ -199,7 +199,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' }
 #' @export
 bone_scan_check <- function(surface_mesh, nifti, return_limits = FALSE) {
-
+  # check input mesh
   if (inherits(surface_mesh, "mesh3d")) {
     vertices <- t(surface_mesh$vb)[, 1:3]
   } else if (is.matrix(surface_mesh) || is.data.frame(surface_mesh)) {
@@ -951,8 +951,8 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #'                                            no_surface_sliders = 5000)
 #'   mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
 #'                                        normal_dist = 3.0, nifti, rev_y=FALSE)
-#'   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi=2000,
-#'                            mini=0)
+#'   color_mesh <- color_mesh(surface_mesh, mapped_coords, mat_peak, maxi = 2000,
+#'                            mini = 0)
 #'   plot <- plot_mesh(color_mesh)
 #' }
 #' @importFrom rgl shade3d view3d bgplot3d
