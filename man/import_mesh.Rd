@@ -7,7 +7,7 @@
 import_mesh(surface_mesh_filepath)
 }
 \arguments{
-\item{surface_mesh_filepath}{String. File path to CT scan data. .stl or .ply}
+\item{surface_mesh_filepath}{String. File path to bone models. .stl or .ply}
 }
 \value{
 mesh object

@@ -54,8 +54,9 @@ plot_cross_section_bone(
 Generates an `rgl` plot
 }
 \description{
-Visualizes a 3D cross-section of a bone using surface mesh and internal density (fill) points.
-Clips the surface mesh at a given axis and value, and overlays a 2D projection of internal density.
+Visualizes a 3D cross-section of a bone using surface mesh and internal density
+(fill) points. Clips the surface mesh at a given axis and value, and overlays a
+2D projection of internal density.
 }
 \examples{
 \dontrun{

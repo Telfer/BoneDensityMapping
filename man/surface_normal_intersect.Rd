@@ -2,11 +2,11 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_normal_intersect}
 \alias{surface_normal_intersect}
-\title{Find material properties of bone at surface point}
+\title{Find material properties of bone at surface point using surface normal}
 \usage{
 surface_normal_intersect(
   surface_mesh,
-  mapped_coords,
+  mapped_coords = NULL,
   normal_dist = 3,
   nifti,
   ct_eqn = NULL,
@@ -20,7 +20,8 @@ surface_normal_intersect(
 \arguments{
 \item{surface_mesh}{Mesh object}
 
-\item{mapped_coords}{Data frame. 3D coords of remapped surface points}
+\item{mapped_coords}{Data frame. 3D coords of remapped surface points. If
+NULL, surface_mesh vertices will be used}
 
 \item{normal_dist}{Numeric. Distance surface normal should penetrate surface}
 
@@ -33,11 +34,11 @@ surface_normal_intersect(
 calculation. For linear, first value is beta coefficient (y intercept),
 second value is sigma coefficient (gradient)}
 
-\item{rev_x}{Logical.}
+\item{rev_x}{Logical. Reverses x voxel coordinates}
 
-\item{rev_y}{Logical.}
+\item{rev_y}{Logical. Reverses y voxel coordinates}
 
-\item{rev_z}{Logical.}
+\item{rev_z}{Logical. Reverses z voxel coordinates}
 
 \item{check_in_vol}{Logical. Include check that model is in scans volume
 and print dimensions}
@@ -46,7 +47,7 @@ and print dimensions}
 Vector. Vector with value for each point on surface
 }
 \description{
-Uses surface normal to find largest value within set distance from surface
+Find material properties of bone at surface point using surface normal
 }
 \examples{
 \dontrun{
@@ -63,10 +64,9 @@ Uses surface normal to find largest value within set distance from surface
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 100)
-  mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-                                       normal_dist = 3.0, nifti,
-                                       ct_eqn = "linear",
+                                           no_surface_sliders = 1000)
+  mat_peak <- surface_normal_intersect(surface_mesh, normal_dist = 3.0,
+                                       nifti = nifti, ct_eqn = "linear",
                                        ct_params = c(68.4, 1.106))
 }
 }

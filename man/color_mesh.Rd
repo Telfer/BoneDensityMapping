@@ -2,14 +2,15 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{color_mesh}
 \alias{color_mesh}
-\title{Density vector of length n and maps it to a surface mesh of length m.}
+\title{Takes a density vector mapped to standardized coordinates and maps it to a
+surface mesh for visualization.}
 \usage{
 color_mesh(
   surface_mesh,
   template_pts,
   density_vector,
-  maxi = 2000,
-  mini = 0,
+  maxi = NULL,
+  mini = NULL,
   export_path,
   color_sel
 )
@@ -30,10 +31,11 @@ color_mesh(
 \item{color_sel}{String}
 }
 \value{
-Mesh with added color dimension
+mesh3d object with added color dimension
 }
 \description{
-Density vector of length n and maps it to a surface mesh of length m.
+Takes a density vector mapped to standardized coordinates and maps it to a
+surface mesh for visualization.
 }
 \examples{
 \dontrun{
@@ -46,12 +48,11 @@ Density vector of length n and maps it to a surface mesh of length m.
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
-  vertices <- t(surface_mesh$vb)[, c(1:3)]
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 100)
+                                           no_surface_sliders = 1000)
   dens <- voxel_point_intersect(mapped_coords, nifti,
                                 ct_eqn = "linear",
                                 ct_params = c(68.4, 1.106))

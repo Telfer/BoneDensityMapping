@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_points_new}
 \alias{surface_points_new}
-\title{New surface points from template}
+\title{New mapped surface points from template}
 \usage{
 surface_points_new(
   surface_mesh,
@@ -30,7 +30,7 @@ points to visually verify correct orientation and laterality.}
 Data frame. 3D coords of remapped surface points
 }
 \description{
-New surface points from template
+New mapped surface points from template
 }
 \examples{
 \dontrun{
@@ -39,16 +39,16 @@ New surface points from template
   download.file(url, bone_filepath, mode = "wb")
   scap_001_mesh <- import_mesh(bone_filepath)
   landmark_path <- system.file("extdata", "SCAP001_landmarks.fcsv",
-                             package = "BoneDensityMapping")
+                               package = "BoneDensityMapping")
   scap_001_lmk <- import_lmks(landmark_path)
   template_coords <- surface_points_template(scap_001_mesh, scap_001_lmk,
-                                           1000)
+                                             1000)
   url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP002.stl"
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   scap_002_mesh <- import_mesh(bone_filepath)
   landmark_path <- system.file("extdata", "SCAP002_landmarks.fcsv",
-                             package = "BoneDensityMapping")
+                               package = "BoneDensityMapping")
   scap_002_lmk <- import_lmks(landmark_path)
   scap_002_remapped <- surface_points_new(scap_002_mesh, scap_002_lmk,
                                           template_coords, mirror = "x",
@@ -56,5 +56,5 @@ New surface points from template
 }
 }
 \author{
-Scott Telfer \email{scott.telfer@gmail.com} Adpated from geomorph
+Scott Telfer \email{scott.telfer@gmail.com} Adapted from geomorph
 }

@@ -9,7 +9,7 @@ landmarks <- import_lmks(lmk_path)
 test_that("landmark_check passes when all landmarks are within threshold", {
   expect_message(
     landmark_check(surface_mesh, landmarks, threshold = 2.0),
-    "Landmarks are on bone surface")
+    "All landmarks are on bone surface.")
 })
 
 

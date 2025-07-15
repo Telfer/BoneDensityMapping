@@ -3,8 +3,7 @@
 # does plot cross section need all the bits in example?
 # examples in surface normal intersect and voxel point intersect for single bone
 # make maxi and mini defaults max and min of vector
-# why add noise to fill_bone_points?
-
+# voxel point interesect, add surface mesh
 
 #' import landmark coordinates
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
@@ -586,9 +585,9 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 #' @param ct_params Numeric vector. Calibration parameters for density
 #' calculation. For linear, first value is beta coefficient (y intercept),
 #' second value is sigma coefficient (gradient)
-#' @param rev_x Logical.
-#' @param rev_y Logical.
-#' @param rev_z Logical.
+#' @param rev_x Logical. Reverses x voxel coordinates
+#' @param rev_y Logical. Reverses y voxel coordinates
+#' @param rev_z Logical. Reverses z voxel coordinates
 #' @param check_in_vol Logical. Include check that model is in scans volume
 #' and print dimensions
 #' @return Vector. Vector with value for each point on surface
@@ -607,7 +606,7 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
+#'                                            no_surface_sliders = 1000)
 #'   mat_peak <- surface_normal_intersect(surface_mesh, normal_dist = 3.0,
 #'                                        nifti = nifti, ct_eqn = "linear",
 #'                                        ct_params = c(68.4, 1.106))
@@ -718,6 +717,9 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords = NULL,
 #' second value is sigma coefficient (gradient)
 #' @param check_in_vol Logical. Include check that model is in scans volume
 #' and print dimensions
+#' @param rev_x Logical. Reverses x voxel coordinates
+#' @param rev_y Logical. Reverses y voxel coordinates
+#' @param rev_z Logical. Reverses z voxel coordinates
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
@@ -729,11 +731,19 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords = NULL,
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url2, bone_filepath, mode = "wb")
 #'   surface_mesh <- import_mesh(bone_filepath)
+#'
+#'   # get density of surface bone directly
+#'   mat_peak <- voxel_point_intersect(surface_mesh, nifti,
+#'                                     ct_eqn = "linear",
+#'                                     ct_params = c(68.4, 1.106),
+#'                                     check_in_vol = FALSE)
+#'
+#'   # remap and get density (for group level comparisons)
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
+#'                                            no_surface_sliders = 1000)
 #'   mat_peak <- voxel_point_intersect(mapped_coords, nifti,
 #'                                     ct_eqn = "linear",
 #'                                     ct_params = c(68.4, 1.106),
@@ -745,31 +755,52 @@ voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
                                   ct_params = NULL, rev_x = FALSE,
                                   rev_y = FALSE, rev_z = FALSE,
                                   check_in_vol = FALSE) {
-  vertex_coords <- data.matrix(vertex_coords)
-  dims <- dim(vertex_coords)
-  vertex_coords <- as.numeric(vertex_coords)
-  dim(vertex_coords) <- dims
+  # check input mesh
+  if (inherits(vertex_coords, "mesh3d")) {
+    vert_coords <- t(vertex_coords$vb)[, 1:3]
+  } else if (is.matrix(vertex_coords) || is.data.frame(vertex_coords)) {
+    vert_coords <- as.matrix(vertex_coords)
+  } else {
+    stop("surface_mesh must be a mesh3d object or a matrix of vertex coordinates.")
+  }
+
+  #vertex_coords <- data.matrix(vertex_coords)
+  #dims <- dim(vertex_coords)
+  #vertex_coords <- as.numeric(vertex_coords)
+  #dim(vertex_coords) <- dims
 
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
   dims <- dim(img_data)
-  x_seq <- seq(niftiHeader(nifti)$qoffset_x * -1, by = niftiHeader(nifti)$srow_x[1] * -1,
-               length.out = dims[1])
-  y_seq <- seq(niftiHeader(nifti)$qoffset_y * -1, by = niftiHeader(nifti)$srow_y[2] * -1,
-               length.out = dims[2])
-  z_seq <- seq(niftiHeader(nifti)$qoffset_z, by = niftiHeader(nifti)$srow_z[3],
-               length.out = dims[3])
+  x_by <- (nifti)@srow_x[1]
+  y_by <- (nifti)@srow_y[2]
+  z_by <- (nifti)@srow_z[3]
+  if (rev_x == TRUE) {
+    x_seq <- rev(seq(nifti@qoffset_x * -1, by = x_by * -1, length.out = dims[1]))
+  } else {
+    x_seq <- seq((nifti)@qoffset_x * -1, by = x_by * -1, length.out = dims[1])
+  }
+  if (rev_y == TRUE) {
+    y_seq <- rev(seq((nifti)@qoffset_y * -1, by = y_by * -1, length.out = dims[2]))
+  } else {
+    y_seq <- seq((nifti)@qoffset_y * -1, by = y_by * -1, length.out = dims[2])
+  }
+  if (rev_z == TRUE) {
+    z_seq <- rev(seq((nifti)@qoffset_z, by = z_by, length.out = dims[3]))
+  } else {
+    z_seq <- seq((nifti)@qoffset_z, by = z_by, length.out = dims[3])
+  }
 
   ## check vertices are in scan volume
   if (check_in_vol == TRUE) {
-    bone_scan_check(vertex_coords, nifti)
+    bone_scan_check(vert_coords, nifti)
   }
 
   ## Find voxels intercepted by line
-  mat_peak <- rep(NA, times = nrow(vertex_coords))
-  for (i in 1:nrow(vertex_coords)) {
-    # start and end points of line
-    point <- vertex_coords[i, ]
+  mat_peak <- rep(NA, times = nrow(vert_coords))
+  for (i in 1:nrow(vert_coords)) {
+    # point coordinates
+    point <- vert_coords[i, ]
 
     # find voxel
     voxel <- c(which.min(abs(point[1] - x_seq)),
@@ -793,9 +824,12 @@ voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
 #' maps numeric values to a color
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param x Vector.
-#' @param maxi Numeric.
-#' @param mini Numeric.
-#' @param color_sel Vector.
+#' @param maxi Numeric. Maximum value. Defaults to maximum value in vector.
+#' Can be useful to set this manually if there are outliers in the scan data
+#' @param mini Numeric. Minimum value. Defaults to minimum value in vector.
+#' Can be useful to set this manually if there are outliers in the scan data
+#' @param color_sel Vector. Colors to use for map. Defaults to a scale of
+#' "grey", "blue", "green", "yellow", "orange", "red", "pink".
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
@@ -807,16 +841,11 @@ voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url2, bone_filepath, mode = "wb")
 #'   surface_mesh <- import_mesh(bone_filepath)
-#'   vertices <- t(surface_mesh$vb)[, c(1:3)]
-#'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
-#'                                package = "BoneDensityMapping")
-#'   landmarks <- import_lmks(landmark_path)
-#'   mat_peak <- voxel_point_intersect(vertices, nifti, ct_eqn = "linear",
+#'   mat_peak <- voxel_point_intersect(surface_mesh, nifti, ct_eqn = "linear",
 #'                                     ct_params = c(68.4, 1.106),)
 #'   colors <- color_mapping(mat_peak)
 #' }
-#'
-#' @return Vector of same length as x
+#' @return Vector of hex color values same length as x
 #' @importFrom grDevices colorRamp rgb
 #' @export
 color_mapping <- function(x, maxi, mini, color_sel) {
@@ -852,7 +881,8 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 }
 
 
-#' takes density vector of length n and maps it to a surface mesh of length m.
+#' Takes a density vector mapped to standardized coordinates and maps it to a
+#' surface mesh for visualization.
 #' @author Scott Telfer \email{scott.telfer@gmail.com}
 #' @param surface_mesh Mesh object
 #' @param template_pts Matrix
@@ -861,7 +891,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @param mini Numeric
 #' @param export_path Character
 #' @param color_sel String
-#' @return Mesh with added color dimension
+#' @return mesh3d object with added color dimension
 #' @examples
 #' \dontrun{
 #'   # Download CT scan
@@ -873,12 +903,11 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url2, bone_filepath, mode = "wb")
 #'   surface_mesh <- import_mesh(bone_filepath)
-#'   vertices <- t(surface_mesh$vb)[, c(1:3)]
 #'   landmark_path <- system.file("extdata", "test_femur.mrk.json",
 #'                                package = "BoneDensityMapping")
 #'   landmarks <- import_lmks(landmark_path)
 #'   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-#'                                            no_surface_sliders = 100)
+#'                                            no_surface_sliders = 1000)
 #'   dens <- voxel_point_intersect(mapped_coords, nifti,
 #'                                 ct_eqn = "linear",
 #'                                 ct_params = c(68.4, 1.106))
@@ -888,7 +917,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @importFrom FNN get.knnx
 #' @export
 color_mesh <- function(surface_mesh, template_pts, density_vector,
-                       maxi = 2000, mini = 0, export_path, color_sel) {
+                       maxi = NULL, mini = NULL, export_path, color_sel) {
 
   mesh_template_match <- function(surface_mesh, template_points) {
     # Get vertex coordinates from the mesh
@@ -1016,8 +1045,9 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
 
 #' Plot Cross-Sectional Bone Visualization in 3D
 #'
-#' Visualizes a 3D cross-section of a bone using surface mesh and internal density (fill) points.
-#' Clips the surface mesh at a given axis and value, and overlays a 2D projection of internal density.
+#' Visualizes a 3D cross-section of a bone using surface mesh and internal density
+#' (fill) points. Clips the surface mesh at a given axis and value, and overlays a
+#' 2D projection of internal density.
 #'
 #' @param surface_mesh A `mesh3d` object representing the outer surface of the bone.
 #' @param surface_colors Optional. A vector of colors for each vertex of the surface mesh. If NULL, uses mesh's own material colors.

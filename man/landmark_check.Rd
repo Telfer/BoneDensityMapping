@@ -9,7 +9,7 @@ landmark_check(surface_mesh, landmarks, threshold = 1)
 \arguments{
 \item{surface_mesh}{mesh object}
 
-\item{landmarks}{dataframe. Columns are landmark name, x, y, and z coords}
+\item{landmarks}{Dataframe. Columns are landmark name, x, y, and z coords}
 
 \item{threshold}{Numeric. Distance landmark can be from surface without
 warning being thrown}
