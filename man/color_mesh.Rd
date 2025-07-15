@@ -2,7 +2,7 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{color_mesh}
 \alias{color_mesh}
-\title{Density vector of length n and maps it to a surface mesh of length m.}
+\title{takes density vector of length n and maps it to a surface mesh of length m.}
 \usage{
 color_mesh(
   surface_mesh,
@@ -33,7 +33,7 @@ color_mesh(
 Mesh with added color dimension
 }
 \description{
-Density vector of length n and maps it to a surface mesh of length m.
+takes density vector of length n and maps it to a surface mesh of length m.
 }
 \examples{
 \dontrun{

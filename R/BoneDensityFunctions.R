@@ -211,33 +211,53 @@ bone_scan_check <- function(surface_mesh, nifti, return_limits = FALSE) {
   # format image data, with voxel coordinates
   img_data <- img_data(nifti)
   dims <- dim(img_data)
-  x_seq <- seq((nifti)@qoffset_x * -1, by = (nifti)@srow_x[1] * -1,
-               length.out = dims[1])
-  y_seq <- seq((nifti)@qoffset_y * -1, by = (nifti)@srow_y[2] * -1,
-               length.out = dims[2])
-  z_seq <- seq((nifti)@qoffset_z, by = (nifti)@srow_z[3],
-               length.out = dims[3])
+  x_seq <- seq((nifti)@qoffset_x * -1, by = (nifti)@srow_x[1] * -1, length.out = dims[1])
+  y_seq <- seq((nifti)@qoffset_y * -1, by = (nifti)@srow_y[2] * -1, length.out = dims[2])
+  z_seq <- seq((nifti)@qoffset_z, by = (nifti)@srow_z[3], length.out = dims[3])
 
-  # check bone is within scan volume
+  # voxel sizes
+  voxel_x <- abs(nifti@srow_x[1])
+  voxel_y <- abs(nifti@srow_y[2])
+  voxel_z <- abs(nifti@srow_z[3])
+
+  # mesh bounds
   mesh_x_min <- min(vertices[, 1])
   mesh_x_max <- max(vertices[, 1])
   mesh_y_min <- min(vertices[, 2])
   mesh_y_max <- max(vertices[, 2])
   mesh_z_min <- min(vertices[, 3])
   mesh_z_max <- max(vertices[, 3])
+
+  # scan bounds
   vol_x_min <- min(x_seq)
   vol_x_max <- max(x_seq)
   vol_y_min <- min(y_seq)
   vol_y_max <- max(y_seq)
   vol_z_min <- min(z_seq)
   vol_z_max <- max(z_seq)
-  x1_good <- mesh_x_min > vol_x_min
-  x2_good <- mesh_x_max < vol_x_max
-  y1_good <- mesh_y_min > vol_y_min
-  y2_good <- mesh_y_max < vol_y_max
-  z1_good <- mesh_z_min > vol_z_min
-  z2_good <- mesh_z_max < vol_z_max
-  vals <- c(x1_good, x2_good, y1_good, y2_good, z1_good, z2_good)
+
+  # check for outside bounds
+  x1_diff <- vol_x_min - mesh_x_min
+  x2_diff <- mesh_x_max - vol_x_max
+  y1_diff <- vol_y_min - mesh_y_min
+  y2_diff <- mesh_y_max - vol_y_max
+  z1_diff <- vol_z_min - mesh_z_min
+  z2_diff <- mesh_z_max - vol_z_max
+
+  diffs <- c(x1_diff, x2_diff, y1_diff, y2_diff, z1_diff, z2_diff)
+  voxel_sizes <- c(voxel_x, voxel_x, voxel_y, voxel_y, voxel_z, voxel_z)
+
+  outside_flags <- diffs > 0
+  exceeds_voxel <- diffs > voxel_sizes
+
+  if (any(outside_flags)) {
+    if (any(exceeds_voxel)) {
+      stop("Mesh not within scan volume.")
+    } else {
+      message("Mesh is within 1 voxel outside scan volume. Consider cropping mesh accordingly.")
+    }
+  }
+
   df <- data.frame(
     Axis = c("X", "Y", "Z"),
     Mesh_Min = c(mesh_x_min, mesh_y_min, mesh_z_min),
@@ -246,14 +266,11 @@ bone_scan_check <- function(surface_mesh, nifti, return_limits = FALSE) {
     Scan_Max = c(vol_x_max, vol_y_max, vol_z_max)
   )
 
-  # return message if bone outside scan limits
-  if (!all(vals)) {stop("Mesh not within scan volume.")}
-
-  # return table if requested
   if (return_limits == TRUE) {
     return(df)
   }
 }
+
 
 
 #' Fills bone with orthogonally spaced points for internal analysis

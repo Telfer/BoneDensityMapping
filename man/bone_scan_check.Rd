@@ -4,17 +4,19 @@
 \alias{bone_scan_check}
 \title{Check if surface model is fully contained within scan volume}
 \usage{
-bone_scan_check(surface_mesh, nifti)
+bone_scan_check(surface_mesh, nifti, return_limits = FALSE)
 }
 \arguments{
 \item{surface_mesh}{mesh object (class \code{mesh3d}) or numeric
 matrix/dataframe of vertex coordinates (cols: X, Y, Z)}
 
 \item{nifti}{NIfTI image object representing CT scan.}
+
+\item{return_limits}{Logical. If TRUE returns a summary of the bounding boxes
+of the scan and mesh}
 }
 \value{
-If mesh is inside the scan volume, the function prints a summary
-  of the mesh and scan bounds. If any vertices lie outside the scan volume, it
+If any vertices lie outside the scan volume, it
   raises an error.
 }
 \description{
@@ -31,7 +33,7 @@ Check if surface model is fully contained within scan volume
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
-  bone_scan_check(surface_mesh, nifti)
+  bone_scan_check(surface_mesh, nifti, return_limits = TRUE)
 }
 }
 \author{

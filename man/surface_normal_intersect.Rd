@@ -2,11 +2,11 @@
 % Please edit documentation in R/BoneDensityFunctions.R
 \name{surface_normal_intersect}
 \alias{surface_normal_intersect}
-\title{Find material properties of bone at surface point}
+\title{Find material properties of bone at surface point using surface normal}
 \usage{
 surface_normal_intersect(
   surface_mesh,
-  mapped_coords,
+  mapped_coords = NULL,
   normal_dist = 3,
   nifti,
   ct_eqn = NULL,
@@ -20,7 +20,8 @@ surface_normal_intersect(
 \arguments{
 \item{surface_mesh}{Mesh object}
 
-\item{mapped_coords}{Data frame. 3D coords of remapped surface points}
+\item{mapped_coords}{Data frame. 3D coords of remapped surface points. If
+NULL, surface_mesh vertices will be used}
 
 \item{normal_dist}{Numeric. Distance surface normal should penetrate surface}
 
@@ -46,7 +47,7 @@ and print dimensions}
 Vector. Vector with value for each point on surface
 }
 \description{
-Uses surface normal to find largest value within set distance from surface
+Find material properties of bone at surface point using surface normal
 }
 \examples{
 \dontrun{
@@ -64,9 +65,8 @@ Uses surface normal to find largest value within set distance from surface
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
                                            no_surface_sliders = 100)
-  mat_peak <- surface_normal_intersect(surface_mesh, mapped_coords,
-                                       normal_dist = 3.0, nifti,
-                                       ct_eqn = "linear",
+  mat_peak <- surface_normal_intersect(surface_mesh, normal_dist = 3.0,
+                                       nifti = nifti, ct_eqn = "linear",
                                        ct_params = c(68.4, 1.106))
 }
 }

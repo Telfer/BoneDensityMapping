@@ -9,6 +9,9 @@ voxel_point_intersect(
   nifti,
   ct_eqn = NULL,
   ct_params = NULL,
+  rev_x = FALSE,
+  rev_y = FALSE,
+  rev_z = FALSE,
   check_in_vol = FALSE
 )
 }
@@ -18,7 +21,7 @@ voxel_point_intersect(
 \item{nifti}{nifti object}
 
 \item{ct_eqn}{String. Equation to use for density calibration. Currently
-"linear" supported.}
+only "linear" is supported.}
 
 \item{ct_params}{Numeric vector. Calibration parameters for density
 calculation. For linear, first value is beta coefficient (y intercept),

@@ -36,8 +36,6 @@ maps numeric values to a color
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
-  mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 100)
   mat_peak <- voxel_point_intersect(vertices, nifti, ct_eqn = "linear",
                                     ct_params = c(68.4, 1.106),)
   colors <- color_mapping(mat_peak)
