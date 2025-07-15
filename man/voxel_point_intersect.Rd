@@ -27,6 +27,12 @@ only "linear" is supported.}
 calculation. For linear, first value is beta coefficient (y intercept),
 second value is sigma coefficient (gradient)}
 
+\item{rev_x}{Logical. Reverses x voxel coordinates}
+
+\item{rev_y}{Logical. Reverses y voxel coordinates}
+
+\item{rev_z}{Logical. Reverses z voxel coordinates}
+
 \item{check_in_vol}{Logical. Include check that model is in scans volume
 and print dimensions}
 }
@@ -47,11 +53,19 @@ Finds material properties of bone at any point
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
+
+  # get density of surface bone directly
+  mat_peak <- voxel_point_intersect(surface_mesh, nifti,
+                                    ct_eqn = "linear",
+                                    ct_params = c(68.4, 1.106),
+                                    check_in_vol = FALSE)
+
+  # remap and get density (for group level comparisons)
   landmark_path <- system.file("extdata", "test_femur.mrk.json",
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 100)
+                                           no_surface_sliders = 1000)
   mat_peak <- voxel_point_intersect(mapped_coords, nifti,
                                     ct_eqn = "linear",
                                     ct_params = c(68.4, 1.106),

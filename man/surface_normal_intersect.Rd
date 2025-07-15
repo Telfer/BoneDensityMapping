@@ -34,11 +34,11 @@ NULL, surface_mesh vertices will be used}
 calculation. For linear, first value is beta coefficient (y intercept),
 second value is sigma coefficient (gradient)}
 
-\item{rev_x}{Logical.}
+\item{rev_x}{Logical. Reverses x voxel coordinates}
 
-\item{rev_y}{Logical.}
+\item{rev_y}{Logical. Reverses y voxel coordinates}
 
-\item{rev_z}{Logical.}
+\item{rev_z}{Logical. Reverses z voxel coordinates}
 
 \item{check_in_vol}{Logical. Include check that model is in scans volume
 and print dimensions}
@@ -64,7 +64,7 @@ Find material properties of bone at surface point using surface normal
                                package = "BoneDensityMapping")
   landmarks <- import_lmks(landmark_path)
   mapped_coords <- surface_points_template(surface_mesh, landmarks,
-                                           no_surface_sliders = 100)
+                                           no_surface_sliders = 1000)
   mat_peak <- surface_normal_intersect(surface_mesh, normal_dist = 3.0,
                                        nifti = nifti, ct_eqn = "linear",
                                        ct_params = c(68.4, 1.106))

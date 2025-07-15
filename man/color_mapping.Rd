@@ -9,14 +9,17 @@ color_mapping(x, maxi, mini, color_sel)
 \arguments{
 \item{x}{Vector.}
 
-\item{maxi}{Numeric.}
+\item{maxi}{Numeric. Maximum value. Defaults to maximum value in vector.
+Can be useful to set this manually if there are outliers in the scan data}
 
-\item{mini}{Numeric.}
+\item{mini}{Numeric. Minimum value. Defaults to minimum value in vector.
+Can be useful to set this manually if there are outliers in the scan data}
 
-\item{color_sel}{Vector.}
+\item{color_sel}{Vector. Colors to use for map. Defaults to a scale of
+"grey", "blue", "green", "yellow", "orange", "red", "pink".}
 }
 \value{
-Vector of same length as x
+Vector of hex color values same length as x
 }
 \description{
 maps numeric values to a color
@@ -32,15 +35,11 @@ maps numeric values to a color
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
-  vertices <- t(surface_mesh$vb)[, c(1:3)]
-  landmark_path <- system.file("extdata", "test_femur.mrk.json",
-                               package = "BoneDensityMapping")
-  landmarks <- import_lmks(landmark_path)
-  mat_peak <- voxel_point_intersect(vertices, nifti, ct_eqn = "linear",
+
+  mat_peak <- voxel_point_intersect(surface_mesh, nifti, ct_eqn = "linear",
                                     ct_params = c(68.4, 1.106),)
   colors <- color_mapping(mat_peak)
 }
-
 }
 \author{
 Scott Telfer \email{scott.telfer@gmail.com}
