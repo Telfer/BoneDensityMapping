@@ -35,6 +35,7 @@ maps numeric values to a color
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
+
   mat_peak <- voxel_point_intersect(surface_mesh, nifti, ct_eqn = "linear",
                                     ct_params = c(68.4, 1.106),)
   colors <- color_mapping(mat_peak)

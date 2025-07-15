@@ -1,33 +1,41 @@
 ---
-title: "ExampleWorkflow"
-author: "Lucas Lacambra"
-date: "2025-06-22"
-output:
-  pdf_document: default
-  html_document: default
+title: "example-workflow-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{example-workflow-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-## --- Single bone analysis --- 
-# If using for the first time, install and load the following package:
-```{r}
-install.packages(BoneDensityMapping)
-library(BoneDensityMapping)
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
-Next, import your data, including the bone mesh stl model, bone landmarks file, 
+```{r setup}
+library(BoneDensityMapping)
+library(rgl)
+
+```
+
+Import your data, including the bone mesh stl model, bone landmarks file, 
 and the CT scan. 
 ```{r}
-surface_mesh_filepath <- system.file("extdata", "test_CT_femur.stl",
-                             package = "BoneDensityMapping")
-surface_mesh <- import_mesh(surface_mesh_filepath)
+url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
+scan_filepath <- tempfile(fileext = ".nii.gz")
+download.file(url, scan_filepath, mode = "wb")
+CTscan <- import_scan(scan_filepath)
+
+url2 <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
+bone_filepath <- tempfile(fileext = ".stl")
+download.file(url2, bone_filepath, mode = "wb")
+surface_mesh <- import_mesh(bone_filepath)
 
 landmark_path <- system.file("extdata", "test_femur.mrk.json",
                              package = "BoneDensityMapping")
 landmarks <- import_lmks(landmark_path)
-
-scan_filepath <- system.file("extdata", "test_CT_hip.nii",
-                             package = "BoneDensityMapping")
-CTscan <- import_scan(scan_filepath)
 ```
 
 It may be helpful to check that the imported landmarks are on or near the surface of the bone mesh. 
@@ -84,13 +92,23 @@ Import data, including bone mesh, landmarks file, and CT scan for each patient i
 ```{r}
 patients <- list()
 
+base_url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/"
+patients <- list()
+
 for (i in 1:6) {
   id <- paste0("SCAP00", i)
-
-  mesh_path <- system.file("extdata", paste0(id, ".stl"), package = "BoneDensityMapping")
+  
+  mesh_url <- paste0(base_url, id, ".stl")
+  ct_url <- paste0(base_url, id, "_resampled.nii.gz")
+  
+  mesh_path <- tempfile(fileext = ".stl")
+  ct_path <- tempfile(fileext = ".nii.gz")
+  
+  download.file(mesh_url, mesh_path, mode = "wb")
+  download.file(ct_url, ct_path, mode = "wb")
+  
   landmark_path <- system.file("extdata", paste0(id, "_landmarks.fcsv"), package = "BoneDensityMapping")
-  ct_path <- system.file("extdata", paste0(id, "_resampled.nrrd"), package = "BoneDensityMapping")
-
+  
   patients[[id]] <- list(
     mesh = import_mesh(mesh_path),
     landmarks = import_lmks(landmark_path),
@@ -102,7 +120,7 @@ for (i in 1:6) {
 
 One bone must be designated the "template" bone; all other bones in the dataset will be mapped to this bone model for comparison. The following function places 100 new points (in addition to landmark points) across the surface of the template bone. 
 ```{r}
-patients$SCAP001$surface_points <- surface_points_template(patients$SCAP001$mesh, patients$SCAP001$landmarks, 10000)  
+patients$SCAP001$surface_points <- surface_points_template(patients$SCAP001$mesh, patients$SCAP001$landmarks, 5000)  
 ```
 
 Then, this function can be applied to all other bones in the set to map all template points to the new bone, creating a consistent set of surface points. The remapping function will fail on chiral objects, so you have the option to temporarily mirror the new bone for the warping process. The function returns a set of points in their original unmirrored form which each correspond to a point on the template surface. Enable plot_check to check laterality before and after the mirroring process. 
