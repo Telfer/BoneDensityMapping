@@ -57,12 +57,12 @@ surface_density <- surface_normal_intersect(surface_mesh, vertices, normal_dist 
 
 The color_map function will assign colors to the density values. 
 ```{r}
-surface_colors <- color_mapping(surface_density, maxi = 1800, mini = 0)
+surface_colors <- color_mapping(surface_density, maxi = 2000, mini = 0)
 ```
 
 Then, the colored mesh can be plotted.
 ```{r}
-plot_mesh(surface_mesh, surface_colors, title = 'Bone surface', legend_maxi = 1800, legend_mini = 0)
+plot_mesh(surface_mesh, surface_colors, title = 'Bone surface', legend_maxi = 2000, legend_mini = 0)
 ```
 
 # Plot cross section
@@ -78,12 +78,12 @@ internal_density <- voxel_point_intersect(internal_fill, CTscan)
 
 We can also map the internal bone density values to colors as shown.
 ```{r}
-internal_colors <- color_mapping(internal_density, maxi = 1800, mini = 0)
+internal_colors <- color_mapping(internal_density, maxi = 2000, mini = 0)
 ```
 
 A cross section of the bone can also be plotted to visualize internal density.
 ```{r}
-plot_cross_section_bone(surface_mesh, surface_colors, IncludeSurface = FALSE, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5, legend_maxi = 1800, legend_mini = 0)
+plot_cross_section_bone(surface_mesh, surface_colors, IncludeSurface = FALSE, internal_fill, internal_colors, slice_axis = 'x', slice_val = 0.5, legend_maxi = 2000, legend_mini = 0)
 ```
 
 
@@ -199,7 +199,7 @@ average_density <- rowMeans(density_matrix)
 average_colored_mesh <- color_mesh(
     patients$SCAP001$mesh,
     patients$SCAP001$surface_points,
-    average_density,
+    average_density
   )
 
 plot_mesh(average_colored_mesh, title = 'avg')

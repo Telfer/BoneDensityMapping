@@ -1015,9 +1015,6 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
   surface_mesh$vb <- rbind(t(vertices), 1)
 
   open3d()
-  oldpar3d <- par3d(skipRedraw = TRUE)  # Save current 3D parameters
-  on.exit(par3d(oldpar3d))              # Ensure they're reset
-
   par3d(windowRect = c(20, 30, 500, 400))
 
   if (!is.null(density_color)) {
@@ -1148,10 +1145,6 @@ plot_cross_section_bone <- function(surface_mesh,
     slice_val * (max(fill_coords[, axis_index]) - min(fill_coords[, axis_index]))
 
   open3d()
-
-  oldpar3d <- par3d(skipRedraw = TRUE)  # Save current 3D parameters
-  on.exit(par3d(oldpar3d))              # Ensure they're reset
-
   par3d(windowRect = c(20, 30, 500, 400))
 
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
