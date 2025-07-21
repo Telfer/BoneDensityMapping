@@ -1040,8 +1040,6 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
     legend_colors <- rev(legend_color_sel)
 
     bgplot3d({
-      par(mar = c(5, 4, 4, 2))  # bottom, left, top, right margins
-
       plot.new()
 
       legend("topright", title = expression("Density (mg/cm"^3*")"),
@@ -1148,6 +1146,7 @@ plot_cross_section_bone <- function(surface_mesh,
 
   open3d()
   par3d(windowRect = c(20, 30, 500, 400))
+
   shade3d(surface_mesh, color = "gray", alpha = 0.2)
 
   # Clip surface
@@ -1223,7 +1222,6 @@ plot_cross_section_bone <- function(surface_mesh,
   }
 
   bgplot3d({
-    par(mar = c(5, 4, 4, 2))
     plot.new()
     if (legend) {
       if (is.null(legend_color_sel)) {
