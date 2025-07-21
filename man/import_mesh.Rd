@@ -16,7 +16,7 @@ mesh object
 import surface mesh
 }
 \examples{
-\dontrun{
+\donttest{
   # Download bone model
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
   bone_filepath <- tempfile(fileext = ".stl")

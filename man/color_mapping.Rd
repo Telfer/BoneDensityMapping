@@ -25,7 +25,7 @@ Vector of hex color values same length as x
 maps numeric values to a color
 }
 \examples{
-\dontrun{
+\donttest{
   # Download CT scan
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -35,7 +35,6 @@ maps numeric values to a color
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url2, bone_filepath, mode = "wb")
   surface_mesh <- import_mesh(bone_filepath)
-
   mat_peak <- voxel_point_intersect(surface_mesh, nifti, ct_eqn = "linear",
                                     ct_params = c(68.4, 1.106),)
   colors <- color_mapping(mat_peak)

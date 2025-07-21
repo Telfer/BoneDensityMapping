@@ -50,7 +50,7 @@ Vector. Vector with value for each point on surface
 Find material properties of bone at surface point using surface normal
 }
 \examples{
-\dontrun{
+\donttest{
   # Download CT scan
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")

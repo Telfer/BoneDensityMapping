@@ -32,6 +32,9 @@ color_bar(
 
 \item{plot}{Logical}
 }
+\value{
+ggplot object
+}
 \description{
 Produce stand alone color bar
 }

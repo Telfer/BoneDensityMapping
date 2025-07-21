@@ -33,7 +33,7 @@ Data frame. 3D coords of remapped surface points
 New mapped surface points from template
 }
 \examples{
-\dontrun{
+\donttest{
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP001.stl"
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url, bone_filepath, mode = "wb")

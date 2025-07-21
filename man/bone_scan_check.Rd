@@ -23,7 +23,7 @@ If any vertices lie outside the scan volume, it
 Check if surface model is fully contained within scan volume
 }
 \examples{
-\dontrun{
+\donttest{
   # Download CT scan
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")

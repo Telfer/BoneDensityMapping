@@ -52,7 +52,7 @@ import_lmks <- function(landmark_path) {
 #' @param scan_filepath String. File path to CT scan data. Should be .nii or .nrrd
 #' @return scan object
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -115,7 +115,7 @@ import_scan <- function(scan_filepath) {
 #' @param surface_mesh_filepath String. File path to bone models. .stl or .ply
 #' @return mesh object
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download bone model
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
@@ -141,7 +141,7 @@ import_mesh <- function(surface_mesh_filepath) {
 #' @return String. Returns a message warning that landmarks are not on bone
 #' surface
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download bone model
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
@@ -184,7 +184,7 @@ landmark_check <- function(surface_mesh, landmarks, threshold = 1.0) {
 #' @return If any vertices lie outside the scan volume, it
 #'   raises an error.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -277,7 +277,7 @@ bone_scan_check <- function(surface_mesh, nifti, return_limits = FALSE) {
 #' @param spacing Numeric
 #' @return Matrix with internal point coordinates
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url, bone_filepath, mode = "wb")
@@ -328,7 +328,7 @@ fill_bone_points <- function(surface_mesh, spacing) {
 #' @return Data frame. 3D coordinates for the combined set of original
 #' landmarks and the new surface points
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url, bone_filepath, mode = "wb")
@@ -385,7 +385,7 @@ surface_points_template <- function(surface_mesh, landmarks,
 #'  points to visually verify correct orientation and laterality.
 #' @return Data frame. 3D coords of remapped surface points
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/SCAP001.stl"
 #'   bone_filepath <- tempfile(fileext = ".stl")
 #'   download.file(url, bone_filepath, mode = "wb")
@@ -609,7 +609,7 @@ surface_points_new <- function(surface_mesh, landmarks, template,
 #' and print dimensions
 #' @return Vector. Vector with value for each point on surface
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -738,7 +738,7 @@ surface_normal_intersect <- function(surface_mesh, mapped_coords = NULL,
 #' @param rev_y Logical. Reverses y voxel coordinates
 #' @param rev_z Logical. Reverses z voxel coordinates
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -848,7 +848,7 @@ voxel_point_intersect <- function(vertex_coords, nifti, ct_eqn = NULL,
 #' @param color_sel Vector. Colors to use for map. Defaults to a scale of
 #' "grey", "blue", "green", "yellow", "orange", "red", "pink".
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -910,7 +910,7 @@ color_mapping <- function(x, maxi, mini, color_sel) {
 #' @param color_sel String
 #' @return mesh3d object with added color dimension
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -979,7 +979,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #' @param legend_mini Numeric. Minimum bone density.
 #' @return plot of mesh with color
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -1082,7 +1082,7 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
 #' @param userMat Optional. A 4x4 matrix controlling view orientation.
 #' @return Generates an `rgl` plot
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   # Download CT scan
 #'   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
 #'   scan_filepath <- tempfile(fileext = ".nii.gz")
@@ -1270,6 +1270,7 @@ plot_cross_section_bone <- function(surface_mesh,
 #' @importFrom ggplot2 ggplot unit labs guides theme element_text geom_point aes scale_color_gradientn guide_colorbar
 #' @importFrom cowplot get_legend
 #' @importFrom ggpubr as_ggplot
+#' @return ggplot object
 #' @export
 color_bar <- function(colors, mini, maxi, orientation = "vertical", breaks,
                       title = "", text_size = 11, plot = TRUE) {

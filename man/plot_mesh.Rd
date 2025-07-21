@@ -39,7 +39,7 @@ plot of mesh with color
 plot mesh
 }
 \examples{
-\dontrun{
+\donttest{
   # Download CT scan
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")

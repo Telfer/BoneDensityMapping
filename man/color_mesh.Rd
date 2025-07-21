@@ -38,7 +38,7 @@ Takes a density vector mapped to standardized coordinates and maps it to a
 surface mesh for visualization.
 }
 \examples{
-\dontrun{
+\donttest{
   # Download CT scan
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.1/test_CT_hip.nii.gz"
   scan_filepath <- tempfile(fileext = ".nii.gz")

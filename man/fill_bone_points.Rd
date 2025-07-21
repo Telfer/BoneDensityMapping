@@ -18,7 +18,7 @@ Matrix with internal point coordinates
 Fills bone with orthogonally spaced points for internal analysis
 }
 \examples{
-\dontrun{
+\donttest{
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url, bone_filepath, mode = "wb")

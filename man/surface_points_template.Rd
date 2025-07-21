@@ -23,7 +23,7 @@ Redefine surface points. Adds additional surface points (“sliders”) that
 are spatially distributed across the mesh surface. Adapted from geomorph
 }
 \examples{
-\dontrun{
+\donttest{
   url <- "https://github.com/Telfer/BoneDensityMapping/releases/download/v1.0.2/test_CT_femur.stl"
   bone_filepath <- tempfile(fileext = ".stl")
   download.file(url, bone_filepath, mode = "wb")
