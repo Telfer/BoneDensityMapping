@@ -1041,7 +1041,6 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
 
     bgplot3d({
       plot.new()
-
       legend("topright", title = expression("Density (mg/cm"^3*")"),
              legend = legend_labels,
              fill = legend_colors,

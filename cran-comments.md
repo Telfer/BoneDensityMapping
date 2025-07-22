@@ -8,6 +8,8 @@
 - Added return value to color_bar.Rd function
 - 
 - Replaced \dontrun{} with \donttest{} in examples that take > 5 seconds to run 
+-
+- Removed changes to user's par within functions
 
 
 ## R CMD check results
