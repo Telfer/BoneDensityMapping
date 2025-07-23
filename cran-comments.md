@@ -1,15 +1,7 @@
 ## Resubmission
 - This is a resubmission. In this version I have:
 -
-- Added text to the Description field
-- 
-- Added references to the description field
--
-- Added return value to color_bar.Rd function
-- 
-- Replaced \dontrun{} with \donttest{} in examples that take > 5 seconds to run 
--
-- Removed changes to user's par within functions
+- Fixed a typo in the Description field
 
 
 ## R CMD check results
