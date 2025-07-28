@@ -1,7 +1,7 @@
 Package: BoneDensityMapping
 Type: Package
 Title: Maps Bone Densities from CT Scans to Surface Models
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(person("Scott", "Telfer", , "scott.telfer@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0002-0104-4027")), 
              person("Lucas", "Lacambra", , "lucasal2@illinois.edu", role = c("aut")))
 Maintainer: Scott Telfer <scott.telfer@gmail.com>
@@ -22,7 +22,6 @@ Imports:
     concaveman, 
     geometry, 
     sp,
-    jsonlite,
     rgl,
     RNifti,
     Rvcg,
