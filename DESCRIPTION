@@ -1,7 +1,7 @@
 Package: BoneDensityMapping
 Type: Package
 Title: Maps Bone Densities from CT Scans to Surface Models
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: c(person("Scott", "Telfer", , "scott.telfer@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0002-0104-4027")), 
              person("Lucas", "Lacambra", , "lucasal2@illinois.edu", role = c("aut")))
 Maintainer: Scott Telfer <scott.telfer@gmail.com>
@@ -32,6 +32,7 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    curl
 Config/testthat/edition: 3
 VignetteBuilder: knitr
