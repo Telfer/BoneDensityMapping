@@ -1,7 +1,6 @@
 ## To-do
 # error message (or fix) for bone model on border of scan?
 # does plot cross section need all the bits in example?
-# examples in surface normal intersect and voxel point intersect for single bone
 # make maxi and mini defaults max and min of vector
 # voxel point interesect, add surface mesh
 
@@ -1018,7 +1017,7 @@ color_mesh <- function(surface_mesh, template_pts, density_vector,
 #' @export
 plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
                       legend = TRUE, legend_color_sel = NULL,
-                      legend_maxi = 2000, legend_mini = 0,
+                      legend_maxi = NULL, legend_mini = NULL,
                       userMat = NULL) {
 
   vertices <- as.matrix(t(surface_mesh$vb)[,-4])
@@ -1040,7 +1039,7 @@ plot_mesh <- function(surface_mesh, density_color = NULL, title = NULL,
     }
 
     if (is.null(legend_maxi) && is.null(legend_mini)) {
-      legend_maxi <- 2100
+      legend_maxi <- 1
       legend_mini <- 0
     }
 

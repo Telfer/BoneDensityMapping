@@ -1,3 +1,11 @@
+# BoneDensityMapping 0.1.4
+
+* Tests and vignettes should now fail gracefully
+
+# BoneDensityMapping 0.1.3
+
+* Tests and vignettes should now fail gracefully 
+
 # BoneDensityMapping 0.1.2
 
 * Rolled reorientate landmark function into import_lmks 

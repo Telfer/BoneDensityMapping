@@ -10,8 +10,8 @@ plot_mesh(
   title = NULL,
   legend = TRUE,
   legend_color_sel = NULL,
-  legend_maxi = 2000,
-  legend_mini = 0,
+  legend_maxi = NULL,
+  legend_mini = NULL,
   userMat = NULL
 )
 }

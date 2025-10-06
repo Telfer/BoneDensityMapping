@@ -1,4 +1,4 @@
-Removed write function that was causing check problems on Debian systems
+Tests and vignettes that use internet resources should now fail gracefully 
 
 ## R CMD check results
 
